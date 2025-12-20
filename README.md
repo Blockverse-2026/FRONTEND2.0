@@ -23,13 +23,13 @@ The goal is a smooth, engaging experience where players move between rounds effo
 
 ---
 
-## � Docs
+## 📘 Docs
 
 - Animation Guide: `docs/animation-guide.md`
 
 ---
 
-## �🚀 Features
+## 🚀 Features
 
 - Cyberpunk-styled UI with neon overlays, scanlines, and parallax canvas
 - Animated dashboard with round navigation and system status
