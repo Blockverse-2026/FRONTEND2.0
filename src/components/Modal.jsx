@@ -3,7 +3,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import TerminalCard from './TerminalCard';
 import NeonButton from './NeonButton';
 
-const Modal = ({ isOpen, onClose, title, children, showClose = true }) => {
+const Modal = ({ isOpen, onClose, title, children, showClose = true, fullScreen = false }) => {
   if (!isOpen) return null;
 
   return (
@@ -22,9 +22,9 @@ const Modal = ({ isOpen, onClose, title, children, showClose = true }) => {
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-lg z-10"
+            className={`relative w-full ${fullScreen ? 'max-w-none' : 'max-w-lg'} z-10`}
           >
-            <TerminalCard title={title} headerColor="gold" className="border-neon-gold shadow-neon-gold">
+            <TerminalCard title={title} headerColor="gold" className={`border-neon-gold shadow-neon-gold ${fullScreen ? 'h-[85vh]' : ''}`}>
               {children}
               {showClose && (
                 <div className="mt-6 flex justify-end">

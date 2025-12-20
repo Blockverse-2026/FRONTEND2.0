@@ -41,6 +41,10 @@ export const GameProvider = ({ children }) => {
     setGameState(prev => ({ ...prev, points: prev.points + amount }));
   };
 
+  const addTokens = (amount) => {
+    setGameState(prev => ({ ...prev, tokens: prev.tokens + amount }));
+  };
+
   const unlockFragment = (fragmentId) => {
     if (!gameState.fragments.includes(fragmentId)) {
       setGameState(prev => ({ 
@@ -58,6 +62,7 @@ export const GameProvider = ({ children }) => {
       setGameState, 
       login, 
       addPoints, 
+      addTokens,
       unlockFragment,
       completeRound,
       markIntroSeen,
