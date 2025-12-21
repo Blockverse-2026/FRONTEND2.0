@@ -151,8 +151,7 @@ const Round2 = () => {
           <Motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/market')}
-            className="flex items-center gap-2 px-4 py-2 border border-neon-gold/50 bg-black/40 text-neon-gold font-orbitron text-sm hover:bg-neon-gold/10 hover:border-neon-gold transition-all rounded-sm"
+            className="flex items-center gap-2 px-4 py-2 border border-neon-gold/50 bg-black/40 text-neon-gold font-orbitron text-sm hover:bg-neon-gold/10 hover:border-neon-gold transition-all rounded-sm cursor-not-allowed"
           >
             <ShoppingBag size={16} />
             <span>MARKET</span>
