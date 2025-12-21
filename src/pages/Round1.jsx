@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Unlock, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
+import { Lock, Unlock, AlertTriangle, Clock, CheckCircle, Coins } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import TerminalCard from '../components/TerminalCard';
 import NeonButton from '../components/NeonButton';
@@ -36,6 +36,7 @@ const Round1 = () => {
   const [timeLeft, setTimeLeft] = useState(60);
   const [timerActive, setTimerActive] = useState(false);
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
+  const [sessionPoints, setSessionPoints] = useState(0);
   const [introOpen, setIntroOpen] = useState(true);
   const [introStep, setIntroStep] = useState(0);
 
@@ -54,8 +55,10 @@ const Round1 = () => {
 
   useEffect(() => {
     if (timeLeft === 0 && timerActive) {
-      setTimerActive(false);
-      setShowCompletionPopup(true);
+      queueMicrotask(() => {
+        setTimerActive(false);
+        setShowCompletionPopup(true);
+      });
     }
   }, [timeLeft, timerActive]);
 
@@ -92,6 +95,7 @@ const Round1 = () => {
       setNodes(newNodes);
       setSelectedNode(null);
       unlockFragment('firewall-node-' + selectedNode.id);
+      setSessionPoints(p => p + 500);
     } else {
       setIsShake(true);
       setTimeout(() => setIsShake(false), 500);
@@ -243,6 +247,7 @@ const Round1 = () => {
                 setTimerActive(true);
                 setAnaVisible(true);
                 setAnaDialogue("Mission start. Breach the grid.");
+                setSessionPoints(0);
               }}>
                 START
               </NeonButton>
@@ -278,10 +283,10 @@ const Round1 = () => {
                 
                 <div className="space-y-2">
                   <h2 className="text-2xl font-bold text-white font-orbitron tracking-wide">
-                    Round 1 Complete
+                    ANA // SYSTEM AI
                   </h2>
                   <p className="text-neon-green font-mono text-lg">
-                    Congratulations!
+                    Congratulations. Firewall breach confirmed.
                   </p>
                 </div>
 
@@ -290,6 +295,13 @@ const Round1 = () => {
                   <div className="flex items-center justify-center gap-2 text-xl font-bold text-white">
                     <Unlock size={20} className="text-neon-green" />
                     <span>Total Unlocked Nodes: <span className="text-neon-green">{unlockedCount}</span></span>
+                  </div>
+                </div>
+                <div className="w-full bg-black/40 rounded-lg p-4 border border-neon-cyan/20">
+                  <p className="text-gray-400 font-mono text-sm mb-1">SESSION REWARDS</p>
+                  <div className="flex items-center justify-center gap-2 text-xl font-bold text-white">
+                    <Coins size={20} className="text-neon-gold" />
+                    <span>Points Earned: <span className="text-neon-gold">{sessionPoints}</span></span>
                   </div>
                 </div>
 
