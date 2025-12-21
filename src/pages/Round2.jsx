@@ -5,11 +5,11 @@ import NeonButton from '../components/NeonButton';
 import { useGame } from '../context/GameContext';
 import GlitchText from '../components/GlitchText';
 import Modal from '../components/Modal';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, CheckCircle, Coins } from 'lucide-react';
 
 const Round2 = () => {
   const navigate = useNavigate();
-  const { setAnaDialogue, completeRound, addPoints, addTokens } = useGame();
+  const { setAnaDialogue, completeRound, addPoints, addTokens, setAnaVisible } = useGame();
   const QUESTIONS = [
     { q: "What does HTTP stand for?", options: ["HyperText Transfer Protocol", "High Transfer Text Protocol", "Hyperlink Transmission Process", "Host Transfer Type Protocol"], a: 0 },
     { q: "Which HTML tag defines a hyperlink?", options: ["<link>", "<a>", "<href>", "<url>"], a: 1 },
@@ -46,6 +46,16 @@ const Round2 = () => {
   };
 
   const [marketOpen, setMarketOpen] = useState(false);
+  const [sessionPoints, setSessionPoints] = useState(0);
+  const [sessionTokens, setSessionTokens] = useState(0);
+
+  useEffect(() => {
+    if (marketOpen) {
+      setAnaVisible(false);
+    } else {
+      setAnaVisible(true);
+    }
+  }, [marketOpen, setAnaVisible]);
 
   return (
     <div className="flex-1 p-6 md:p-12 space-y-8">
@@ -83,6 +93,8 @@ const Round2 = () => {
                       if (isRight) {
                         addPoints(100);
                         addTokens(1);
+                        setSessionPoints(p => p + 100);
+                        setSessionTokens(t => t + 1);
                       }
                     }}
                   >
@@ -99,12 +111,16 @@ const Round2 = () => {
                   onClick={() => {
                     if (!answered) return;
                     const next = idx + 1;
-                    setIdx(next < QUESTIONS.length ? next : 0);
-                    setAnswered(false);
-                    setCorrect(null);
+                    if (next < QUESTIONS.length) {
+                      setIdx(next);
+                      setAnswered(false);
+                      setCorrect(null);
+                    } else {
+                      setMarketOpen(true);
+                    }
                   }}
                 >
-                  {idx + 1 < QUESTIONS.length ? 'NEXT' : 'RESTART'}
+                  {idx + 1 < QUESTIONS.length ? 'NEXT' : 'VIEW SUMMARY'}
                 </NeonButton>
               </div>
             </div>
@@ -115,16 +131,31 @@ const Round2 = () => {
       <Modal 
         isOpen={marketOpen}
         onClose={() => setMarketOpen(false)}
-        title="BLACK MARKET"
+        title="ANA // SYSTEM AI"
         showClose={true}
         fullScreen={true}
       >
-        <div className="space-y-6">
-          <div className="flex items-center justify-center flex-col gap-4 text-gray-500 h-[60vh]">
-            <div className="w-16 h-16 border-2 border-dashed border-gray-700 rounded-full flex items-center justify-center animate-spin-slow">
-              <span className="font-mono text-xs">OFFLINE</span>
+        <div className="h-[70vh] flex items-center justify-center">
+          <div className="max-w-xl w-full mx-auto text-center space-y-8">
+            <CheckCircle size={64} className="mx-auto text-neon-green drop-shadow-[0_0_10px_rgba(16,255,120,0.5)]" />
+            <div className="space-y-2">
+              <h2 className="text-2xl font-orbitron text-white tracking-wide">Protocol Update</h2>
+              <p className="font-mono text-neon-green">Congratulations. Knowledge acquisition successful.</p>
             </div>
-            <p className="font-mono text-sm">MARKETPLACE CONNECTION SEVERED</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-black/40 rounded-lg p-4 border border-neon-green/30">
+                <div className="flex items-center justify-center gap-2 text-white font-bold text-xl">
+                  <Coins size={20} className="text-neon-gold" />
+                  <span>Points Earned: <span className="text-neon-green">{sessionPoints}</span></span>
+                </div>
+              </div>
+              <div className="bg-black/40 rounded-lg p-4 border border-neon-cyan/30">
+                <div className="flex items-center justify-center gap-2 text-white font-bold text-xl">
+                  <Coins size={20} className="text-neon-cyan" />
+                  <span>Tokens Earned: <span className="text-neon-cyan">{sessionTokens}</span></span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </Modal>
