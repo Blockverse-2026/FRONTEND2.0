@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Round1 from './pages/Round1';
 import Round2 from './pages/Round2';
 import Round3 from './pages/Round3';
+import BlackMarket from './pages/BlackMarket';
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -30,6 +31,7 @@ function App() {
               <Route path="/round1" element={<Round1 />} />
               <Route path="/round2" element={<Round2 />} />
               <Route path="/round3" element={<Round3 />} />
+              <Route path="/market" element={<BlackMarket />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
