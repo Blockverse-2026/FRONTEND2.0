@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, ShoppingBag, Database, Activity, Lock, Check } from 'lucide-react';
 import TerminalCard from '../components/TerminalCard';
@@ -24,6 +24,11 @@ const Dashboard = () => {
   const [tokensDisplay, setTokensDisplay] = useState(0);
   const [introOpen, setIntroOpen] = useState(false);
   const [introStep, setIntroStep] = useState(0);
+  const boxRef = useRef(null);
+  const canvasRef = useRef(null);
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const [reveal, setReveal] = useState(0);
+  const starsRef = useRef([]);
 
   const isRound2Locked = !gameState.completedRounds.includes('round1');
   const isRound3Locked = !gameState.completedRounds.includes('round2');
@@ -33,13 +38,15 @@ const Dashboard = () => {
   const isRound3Complete = gameState.completedRounds.includes('round3');
 
   useEffect(() => {
-    if (!gameState.seenIntro) {
-      setIntroOpen(true);
-      setAnaDialogue(DASHBOARD_INTRO[0]);
-    } else {
-      setIntroOpen(false);
-    }
-    setAnaVisible(false);
+    queueMicrotask(() => {
+      if (!gameState.seenIntro) {
+        setIntroOpen(true);
+        setAnaDialogue(DASHBOARD_INTRO[0]);
+      } else {
+        setIntroOpen(false);
+      }
+      setAnaVisible(false);
+    });
   }, [setAnaDialogue, setAnaVisible, gameState.seenIntro]);
 
   useEffect(() => {
@@ -55,6 +62,95 @@ const Dashboard = () => {
     };
   }, [gameState.points, gameState.tokens, pointsMV, tokensMV]);
 
+  useEffect(() => {
+    if (starsRef.current.length === 0) {
+      starsRef.current = Array.from({ length: 28 }, () => ({
+        x: Math.random(),
+        y: Math.random(),
+        size: Math.random() * 1.2 + 0.4,
+        vx: (Math.random() * 0.08 + 0.02) * (Math.random() < 0.5 ? -1 : 1),
+        vy: (Math.random() * 0.08 + 0.02)
+      }));
+    }
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const resize = () => {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+    };
+    resize();
+    let raf;
+    const loop = () => {
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      const px = mouseRef.current.x * 0.02;
+      const py = mouseRef.current.y * 0.02;
+      starsRef.current.forEach(s => {
+        s.x += s.vx * 0.0006;
+        s.y += s.vy * 0.0006;
+        if (s.x < 0) s.x = 1;
+        if (s.x > 1) s.x = 0;
+        if (s.y < 0) s.y = 1;
+        if (s.y > 1) s.y = 0;
+        const x = s.x * w + px;
+        const y = s.y * h + py;
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.beginPath();
+        ctx.arc(x, y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 2; i++) {
+        const x1 = (i * 0.4 + (mouseRef.current.x / Math.max(1, canvas.clientWidth)) * 0.08) * w;
+        const y1 = 0;
+        const x2 = x1 + w * 0.5;
+        const y2 = h;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    const onResize = () => resize();
+    window.addEventListener('resize', onResize);
+    loop();
+    return () => {
+      window.removeEventListener('resize', onResize);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const onMove = (e) => {
+      const rect = el.getBoundingClientRect();
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      mouseRef.current = { x: Math.max(0, Math.min(rect.width, x)), y: Math.max(0, Math.min(rect.height, y)) };
+      const pct = Math.min(1, Math.max(0, x / rect.width));
+      setReveal(pct);
+    };
+    const onLeave = () => {
+      setReveal(0);
+    };
+    el.addEventListener('mousemove', onMove);
+    el.addEventListener('mouseleave', onLeave);
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onLeave);
+    return () => {
+      el.removeEventListener('mousemove', onMove);
+      el.removeEventListener('mouseleave', onLeave);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onLeave);
+    };
+  }, []);
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -99,7 +195,7 @@ const Dashboard = () => {
       </Motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Motion.div variants={itemVariants} className="md:col-span-1">
+        <Motion.div variants={itemVariants} className="md:col-span-1 md:row-span-2">
           <Motion.div whileHover={{ scale: 1.01 }}>
             <TerminalCard title="DATA FRAGMENTS" className="h-full">
               <div className="space-y-4">
@@ -188,6 +284,8 @@ const Dashboard = () => {
               {!isRound3Locked && <Activity className="group-hover:text-white transition-colors" size={20} />}
             </NeonButton>
           </Motion.div>
+          
+          
         </Motion.div>
 
         <Motion.div variants={itemVariants} className="md:col-span-1">
@@ -224,6 +322,27 @@ const Dashboard = () => {
               </div>
             </TerminalCard>
           </Motion.div>
+        </Motion.div>
+        
+        <Motion.div variants={itemVariants} className="hidden md:block md:col-span-2 md:col-start-2 md:row-start-2">
+          <div ref={boxRef} className="relative w-full h-56 bg-black overflow-hidden">
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative text-center">
+                <div className="text-3xl md:text-5xl font-bold text-white/15 blur-[0.6px] whitespace-nowrap leading-tight">
+                  ANA is guiding you.
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span
+                    className="text-3xl md:text-5xl font-bold text-white whitespace-nowrap leading-tight inline-block"
+                    style={{ clipPath: `inset(0 calc(${(1 - reveal) * 100}% - 1px) 0 0)`, willChange: 'clip-path' }}
+                  >
+                    ZERO tried to warn you.
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </Motion.div>
       </div>
       </Motion.div>
