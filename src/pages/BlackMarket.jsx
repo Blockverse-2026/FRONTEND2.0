@@ -67,7 +67,7 @@ const CLUES = [
 
 const BlackMarket = () => {
   const navigate = useNavigate();
-  const { gameState, addTokens } = useGame();
+  const { gameState, addTokens, completeRound } = useGame();
 
   const [ownedClues, setOwnedClues] = useState(new Set());
   const [selectedClue, setSelectedClue] = useState(null);
@@ -104,7 +104,15 @@ const BlackMarket = () => {
               transition={{ duration: 0.6 }}
               className="h-1 bg-gradient-to-r from-neon-cyan via-neon-magenta to-neon-green rounded-full"
             />
-            <NeonButton variant="secondary" onClick={() => navigate('/dashboard')}>EXIT MARKET</NeonButton>
+            <NeonButton
+              variant="secondary"
+              onClick={() => {
+                completeRound('round2');
+                navigate('/dashboard');
+              }}
+            >
+              EXIT MARKET
+            </NeonButton>
           </div>
         </div>
 
