@@ -8,7 +8,7 @@ import Modal from "../components/Modal";
 const TOTAL_NODES = 50;
 
 const Round1 = () => {
-  /* ================= STATE ================= */
+ 
   const [questions, setQuestions] = useState([]);
   const [nodes, setNodes] = useState(
     Array.from({ length: TOTAL_NODES }, (_, i) => ({
@@ -23,7 +23,6 @@ const Round1 = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  /* ================= FETCH QUESTIONS ================= */
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
@@ -50,7 +49,6 @@ const Round1 = () => {
     fetchQuestions();
   }, []);
 
-  /* ================= OPEN NODE ================= */
   const handleNodeClick = (node) => {
     if (node.status === "unlocked") return;
 
@@ -62,7 +60,6 @@ const Round1 = () => {
     setSelectedIndex(null);
   };
 
-  /* ================= SUBMIT ANSWER ================= */
   const submitAnswer = async () => {
     if (selectedIndex === null || !activeQuestion || submitting) return;
 
@@ -90,7 +87,6 @@ const Round1 = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Submission failed");
 
-      // ✅ unlock node only on success
       setNodes((prev) => {
         const copy = [...prev];
         copy[selectedNode.id].status = "unlocked";
@@ -104,7 +100,6 @@ const Round1 = () => {
     }
   };
 
-  /* ================= CLOSE MODAL ================= */
   const closeModal = () => {
     setSelectedNode(null);
     setActiveQuestion(null);
@@ -112,7 +107,6 @@ const Round1 = () => {
     setSubmitting(false);
   };
 
-  /* ================= UI ================= */
   if (error) {
     return <div className="p-6 text-red-500">{error}</div>;
   }

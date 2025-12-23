@@ -9,7 +9,6 @@ import Modal from "../components/Modal";
 import GlitchText from "../components/GlitchText";
 import { useGame } from "../context/GameContext";
 
-/* ================= ANA MESSAGES ================= */
 
 const INTRO_MESSAGES = [
   "Welcome to Round 2: Knowledge Acquisition.",
@@ -28,13 +27,11 @@ const POST_ANA_MESSAGES = [
 
 const TOTAL_TIME = 60;
 
-/* ================= COMPONENT ================= */
 
 const Round2 = () => {
   const navigate = useNavigate();
   const { setAnaDialogue, setAnaVisible, addPoints, addTokens } = useGame();
 
-  /* ---------- state ---------- */
 
   const [questions, setQuestions] = useState([]);
   const [idx, setIdx] = useState(0);
@@ -55,7 +52,6 @@ const Round2 = () => {
   const [sessionPoints, setSessionPoints] = useState(0);
   const [sessionTokens, setSessionTokens] = useState(0);
 
-  /* ================= FETCH QUESTIONS ================= */
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -77,7 +73,6 @@ const Round2 = () => {
     fetchQuestions();
   }, []);
 
-  /* ================= TIMER ================= */
 
   useEffect(() => {
     if (introOpen || marketOpen) return;
@@ -91,14 +86,13 @@ const Round2 = () => {
     }
   }, [timer, introOpen, marketOpen, roundFinished]);
 
-  /* ================= ANA INIT ================= */
 
   useEffect(() => {
     setAnaVisible(false);
     setAnaDialogue(INTRO_MESSAGES[0]);
   }, [setAnaDialogue, setAnaVisible]);
 
-  /* ================= SUBMIT ANSWER ================= */
+  
 
   const submitAnswer = async () => {
     if (!answer.trim()) return;
@@ -134,7 +128,7 @@ const Round2 = () => {
     setAnswered(true);
   };
 
-  /* ================= NEXT ================= */
+  
 
   const nextQuestion = () => {
     setAnswered(false);
@@ -147,7 +141,6 @@ const Round2 = () => {
     }
   };
 
-  /* ================= UI ================= */
 
   if (!questions.length) {
     return <div className="p-6 text-neon-cyan">LOADING ROUND 2…</div>;
