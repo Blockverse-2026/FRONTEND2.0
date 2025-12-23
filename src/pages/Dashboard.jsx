@@ -30,7 +30,9 @@ const Dashboard = () => {
   const [reveal, setReveal] = useState(0);
   const starsRef = useRef([]);
 
-  const isRound2Locked = !gameState.completedRounds.includes('round1');
+  // const isRound2Locked = !gameState.completedRounds.includes('round1');
+  const isRound2Locked = false; // 🔓 TEMP UNLOCK FOR TESTING
+
   const isRound3Locked = !gameState.completedRounds.includes('round2');
 
   const isRound1Complete = gameState.completedRounds.includes('round1');
