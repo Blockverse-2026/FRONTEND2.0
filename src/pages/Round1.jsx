@@ -4,15 +4,18 @@ import { motion as Motion } from "framer-motion";
 import TerminalCard from "../components/TerminalCard";
 import NeonButton from "../components/NeonButton";
 import Modal from "../components/Modal";
+import { useNavigate } from "react-router-dom";
 
 const TOTAL_NODES = 50;
 
 const Round1 = () => {
+  const navigate = useNavigate();
+
   const [questions, setQuestions] = useState([]);
   const [nodes, setNodes] = useState(
     Array.from({ length: TOTAL_NODES }, (_, i) => ({
       id: i,
-      status: "locked", // locked | unlocked | blocked
+      status: "locked",
     }))
   );
 
@@ -22,6 +25,22 @@ const Round1 = () => {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const savedNodes = localStorage.getItem("round1_nodes");
+    const savedScore = localStorage.getItem("round1_score");
+
+    if (savedNodes) setNodes(JSON.parse(savedNodes));
+    if (savedScore) setScore(parseInt(savedScore));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("round1_nodes", JSON.stringify(nodes));
+  }, [nodes]);
+
+  useEffect(() => {
+    localStorage.setItem("round1_score", score.toString());
+  }, [score]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -60,7 +79,6 @@ const Round1 = () => {
     setSelectedIndex(null);
   };
 
-  // ---------- BLOCK NODE ----------
   const blockNode = (id) => {
     setNodes((prev) => {
       const copy = [...prev];
@@ -69,11 +87,9 @@ const Round1 = () => {
     });
   };
 
-  // ---------- SUBMIT ANSWER ----------
   const submitAnswer = async () => {
     if (selectedIndex === null || !activeQuestion || submitting) return;
 
-    // prevent answering again
     if (
       nodes[selectedNode.id].status === "unlocked" ||
       nodes[selectedNode.id].status === "blocked"
@@ -103,14 +119,12 @@ const Round1 = () => {
       const json = await res.json();
       console.log("Response:", json);
 
-      // ---- WRONG ANSWER (backend sends correct:false) ----
       if (json.data?.correct === false) {
         alert("Incorrect Answer ❌");
         blockNode(selectedNode.id);
         return closeModal();
       }
 
-      // ---- CORRECT ANSWER ----
       if (json.data?.correct === true || json.data?.points > 0) {
         alert("Correct Answer 🎉");
 
@@ -183,17 +197,27 @@ const Round1 = () => {
         <TerminalCard title="ROUND 1 STATUS" headerColor="red">
           <div className="space-y-3 font-mono text-sm">
             <p>MISSION: FIREWALL GRID</p>
+
             <p>
               UNLOCKED:{" "}
               <span className="text-neon-green">
                 {unlockedCount}/{TOTAL_NODES}
               </span>
             </p>
+
             <div className="flex items-center gap-2 text-neon-cyan">
               <Clock size={14} />
               <span>TIME LIMITED ROUND</span>
             </div>
+
             <p className="text-neon-green text-xl">SCORE: {score}</p>
+
+            <NeonButton
+              className="mt-4 w-full"
+              onClick={() => navigate("/round2/phase1")}
+            >
+              PROCEED TO ROUND 2 →
+            </NeonButton>
           </div>
         </TerminalCard>
       </div>
@@ -215,7 +239,7 @@ const Round1 = () => {
                 <button
                   key={idx}
                   onClick={() => setSelectedIndex(idx)}
-                  className={`w-full p-2 border text-left font-mono
+                  className={`w-full p-2 border text-left font-mono transition-all
                     ${
                       selectedIndex === idx
                         ? "border-neon-green bg-neon-green/10"

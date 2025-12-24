@@ -9,29 +9,26 @@ import Modal from "../components/Modal";
 import GlitchText from "../components/GlitchText";
 import { useGame } from "../context/GameContext";
 
-
 const INTRO_MESSAGES = [
   "Welcome to Round 2: Knowledge Acquisition.",
   "Objective: Solve numerical challenges.",
   "Each correct submission yields rewards.",
   "All answers are verified by the core system.",
-  "Tap START to initialize protocol."
+  "Tap START to initialize protocol.",
 ];
 
 const POST_ANA_MESSAGES = [
   "Marketplace access granted.",
   "Use earned tokens strategically.",
   "Upgrades will affect future rounds.",
-  "Proceed to marketplace."
+  "Proceed to marketplace.",
 ];
 
 const TOTAL_TIME = 60;
 
-
 const Round2 = () => {
   const navigate = useNavigate();
   const { setAnaDialogue, setAnaVisible, addPoints, addTokens } = useGame();
-
 
   const [questions, setQuestions] = useState([]);
   const [idx, setIdx] = useState(0);
@@ -51,7 +48,6 @@ const Round2 = () => {
 
   const [sessionPoints, setSessionPoints] = useState(0);
   const [sessionTokens, setSessionTokens] = useState(0);
-
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -73,12 +69,11 @@ const Round2 = () => {
     fetchQuestions();
   }, []);
 
-
   useEffect(() => {
     if (introOpen || marketOpen) return;
 
     if (timer > 0) {
-      const i = setInterval(() => setTimer(t => t - 1), 1000);
+      const i = setInterval(() => setTimer((t) => t - 1), 1000);
       return () => clearInterval(i);
     } else if (!roundFinished) {
       setMarketOpen(true);
@@ -86,13 +81,10 @@ const Round2 = () => {
     }
   }, [timer, introOpen, marketOpen, roundFinished]);
 
-
   useEffect(() => {
     setAnaVisible(false);
     setAnaDialogue(INTRO_MESSAGES[0]);
   }, [setAnaDialogue, setAnaVisible]);
-
-  
 
   const submitAnswer = async () => {
     if (!answer.trim()) return;
@@ -106,12 +98,12 @@ const Round2 = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             questionId: questions[idx].questionId,
-            answer: Number(answer)
-          })
+            answer: Number(answer),
+          }),
         }
       );
 
@@ -119,16 +111,14 @@ const Round2 = () => {
 
       addPoints(100);
       addTokens(1);
-      setSessionPoints(p => p + 100);
-      setSessionTokens(t => t + 1);
+      setSessionPoints((p) => p + 100);
+      setSessionTokens((t) => t + 1);
     } catch (e) {
       console.warn("Submission failed");
     }
 
     setAnswered(true);
   };
-
-  
 
   const nextQuestion = () => {
     setAnswered(false);
@@ -141,20 +131,22 @@ const Round2 = () => {
     }
   };
 
-
   if (!questions.length) {
     return <div className="p-6 text-neon-cyan">LOADING ROUND 2…</div>;
   }
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-
       {/* HEADER */}
       <div className="flex justify-between items-center p-6">
         <GlitchText text="ROUND 2 // NUMERICAL CORE" as="h2" />
-        <div className={`flex items-center gap-2 px-4 py-2 border ${
-          timer <= 10 ? "border-red-500 text-red-500 animate-pulse" : "border-neon-cyan text-neon-cyan"
-        }`}>
+        <div
+          className={`flex items-center gap-2 px-4 py-2 border ${
+            timer <= 10
+              ? "border-red-500 text-red-500 animate-pulse"
+              : "border-neon-cyan text-neon-cyan"
+          }`}
+        >
           <Clock size={16} />
           {String(Math.floor(timer / 60)).padStart(2, "0")}:
           {String(timer % 60).padStart(2, "0")}
@@ -170,7 +162,6 @@ const Round2 = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-
             {waitingForTimer ? (
               <TerminalCard title="SYSTEM SYNC">
                 <div className="h-60 flex flex-col items-center justify-center gap-4">
@@ -183,7 +174,6 @@ const Round2 = () => {
             ) : (
               <TerminalCard title={`QUESTION ${idx + 1}/${questions.length}`}>
                 <div className="space-y-6">
-
                   <p className="text-white text-xl font-mono">
                     {questions[idx].question}
                   </p>
@@ -192,7 +182,7 @@ const Round2 = () => {
                     type="text"
                     inputMode="numeric"
                     value={answer}
-                    onChange={e =>
+                    onChange={(e) =>
                       setAnswer(e.target.value.replace(/[^0-9]/g, ""))
                     }
                     placeholder="ENTER NUMERIC ANSWER"
@@ -200,24 +190,17 @@ const Round2 = () => {
                   />
 
                   <div className="flex justify-between">
-                    <NeonButton
-                      onClick={submitAnswer}
-                      disabled={answered}
-                    >
+                    <NeonButton onClick={submitAnswer} disabled={answered}>
                       SUBMIT
                     </NeonButton>
 
-                    <NeonButton
-                      onClick={nextQuestion}
-                      disabled={!answered}
-                    >
+                    <NeonButton onClick={nextQuestion} disabled={!answered}>
                       NEXT
                     </NeonButton>
                   </div>
                 </div>
               </TerminalCard>
             )}
-
           </Motion.div>
         </AnimatePresence>
       </div>
@@ -230,19 +213,23 @@ const Round2 = () => {
           </div>
           <div className="flex justify-end gap-3">
             {introStep < INTRO_MESSAGES.length - 1 ? (
-              <NeonButton onClick={() => {
-                const n = introStep + 1;
-                setIntroStep(n);
-                setAnaDialogue(INTRO_MESSAGES[n]);
-              }}>
+              <NeonButton
+                onClick={() => {
+                  const n = introStep + 1;
+                  setIntroStep(n);
+                  setAnaDialogue(INTRO_MESSAGES[n]);
+                }}
+              >
                 NEXT
               </NeonButton>
             ) : (
-              <NeonButton onClick={() => {
-                setIntroOpen(false);
-                setAnaVisible(true);
-                setAnaDialogue("Protocol engaged.");
-              }}>
+              <NeonButton
+                onClick={() => {
+                  setIntroOpen(false);
+                  setAnaVisible(true);
+                  setAnaDialogue("Protocol engaged.");
+                }}
+              >
                 START
               </NeonButton>
             )}
@@ -255,7 +242,9 @@ const Round2 = () => {
         <div className="h-full flex items-center justify-center">
           <div className="text-center space-y-6">
             <CheckCircle size={72} className="text-neon-green mx-auto" />
-            <h2 className="text-3xl text-white font-orbitron">MARKET UNLOCKED</h2>
+            <h2 className="text-3xl text-white font-orbitron">
+              MARKET UNLOCKED
+            </h2>
 
             <div className="flex gap-6 justify-center">
               <div className="text-neon-green font-mono">
@@ -266,10 +255,12 @@ const Round2 = () => {
               </div>
             </div>
 
-            <NeonButton onClick={() => {
-              setMarketOpen(false);
-              setPostAnaOpen(true);
-            }}>
+            <NeonButton
+              onClick={() => {
+                setMarketOpen(false);
+                setPostAnaOpen(true);
+              }}
+            >
               CONTINUE
             </NeonButton>
           </div>
@@ -284,7 +275,7 @@ const Round2 = () => {
           </div>
           <div className="flex justify-end gap-3">
             {postAnaStep < POST_ANA_MESSAGES.length - 1 ? (
-              <NeonButton onClick={() => setPostAnaStep(s => s + 1)}>
+              <NeonButton onClick={() => setPostAnaStep((s) => s + 1)}>
                 NEXT
               </NeonButton>
             ) : (
