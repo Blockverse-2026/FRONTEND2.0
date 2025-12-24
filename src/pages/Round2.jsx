@@ -1,292 +1,261 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion as Motion, AnimatePresence } from "framer-motion";
-import { Clock, Coins, CheckCircle, Activity } from "lucide-react";
 
+import React, { useEffect, useState } from "react";
+import { Lock, Unlock } from "lucide-react";
+import { motion as Motion } from "framer-motion";
 import TerminalCard from "../components/TerminalCard";
 import NeonButton from "../components/NeonButton";
 import Modal from "../components/Modal";
-import GlitchText from "../components/GlitchText";
-import { useGame } from "../context/GameContext";
+import { useNavigate } from "react-router-dom";
 
+const TOTAL_NODES = 20;
 
-const TOTAL_TIME = 120; 
-
-const INTRO_MESSAGES = [
-  "Welcome to Round 2: Numerical Ability.",
-  "Solve all numerical questions within given time.",
-  "You may switch questions anytime.",
-  "Each correct submission yields rewards.",
-  "Tap START to begin."
-];
-
-const POST_ANA_MESSAGES = [
-  "Marketplace unlocked.",
-  "Use earned tokens wisely.",
-  "Upgrades impact upcoming rounds.",
-  "Proceed to marketplace."
-];
-
-
-const Round2 = () => {
+const Round2Phase1 = () => {
   const navigate = useNavigate();
-  const { setAnaDialogue, setAnaVisible, addPoints, addTokens } = useGame();
 
   const [questions, setQuestions] = useState([]);
-  const [idx, setIdx] = useState(0);
-  const [answer, setAnswer] = useState("");
-  const [answered, setAnswered] = useState(false);
+  const [nodes, setNodes] = useState(
+    Array.from({ length: TOTAL_NODES }, (_, i) => ({
+      id: i,
+      status: "locked", // locked | unlocked | blocked
+    }))
+  );
 
-  const [visited, setVisited] = useState({});
-  const [submittedMap, setSubmittedMap] = useState({});
+  const [tokens, setTokens] = useState(0);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [activeQuestion, setActiveQuestion] = useState(null);
 
-  const [timer, setTimer] = useState(TOTAL_TIME);
-  const [roundFinished, setRoundFinished] = useState(false);
+  const [userAnswer, setUserAnswer] = useState(""); // ← FREE TEXT INPUT
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
-  const [introOpen, setIntroOpen] = useState(true);
-  const [introStep, setIntroStep] = useState(0);
+  /* RESTORE LOCAL STORAGE */
+  useEffect(() => {
+    const savedNodes = localStorage.getItem("round2_phase1_nodes");
+    const savedTokens = localStorage.getItem("round2_phase1_tokens");
 
-  const [marketOpen, setMarketOpen] = useState(false);
-  const [postAnaOpen, setPostAnaOpen] = useState(false);
-  const [postAnaStep, setPostAnaStep] = useState(0);
+    if (savedNodes) setNodes(JSON.parse(savedNodes));
+    if (savedTokens) setTokens(parseInt(savedTokens));
+  }, []);
 
-  const [sessionPoints, setSessionPoints] = useState(0);
-  const [sessionTokens, setSessionTokens] = useState(0);
+  /* SAVE LOCAL STORAGE */
+  useEffect(() => {
+    localStorage.setItem("round2_phase1_nodes", JSON.stringify(nodes));
+  }, [nodes]);
 
+  useEffect(() => {
+    localStorage.setItem("round2_phase1_tokens", tokens.toString());
+  }, [tokens]);
+
+  /* FETCH QUESTIONS */
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         const token = localStorage.getItem("BLOCKVERSE_TOKEN");
+
         const res = await fetch(
           "https://blockverse-backend.onrender.com/api/round2/phase1/questions",
-          { headers: { Authorization: `Bearer ${token}` } }
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
+
         const json = await res.json();
-        if (!res.ok || !json?.data?.questions) {
+        if (!res.ok || !json?.data?.questions)
           throw new Error("Failed to load questions");
-        }
-        setQuestions(json.data.questions);
+
+        const sorted = json.data.questions.sort((a, b) => a.order - b.order);
+
+        setQuestions(sorted);
       } catch (err) {
-        console.error(err);
+        setError(err.message);
       }
     };
+
     fetchQuestions();
   }, []);
 
+  /* CLICK NODE */
+  const handleNodeClick = (node) => {
+    if (node.status === "unlocked" || node.status === "blocked") return;
 
-  useEffect(() => {
-    if (introOpen || marketOpen) return;
+    const q = questions.find((q) => q.order === node.id + 1);
+    if (!q) return;
 
-    if (timer > 0) {
-      const i = setInterval(() => setTimer(t => t - 1), 1000);
-      return () => clearInterval(i);
-    } else if (!roundFinished) {
-      setMarketOpen(true);
-      setRoundFinished(true);
-    }
-  }, [timer, introOpen, marketOpen, roundFinished]);
+    setSelectedNode(node);
+    setActiveQuestion(q);
+    setUserAnswer(""); // reset input
+  };
 
-
-  useEffect(() => {
-    setAnaVisible(false);
-    setAnaDialogue(INTRO_MESSAGES[0]);
-  }, [setAnaDialogue, setAnaVisible]);
-
-  useEffect(() => {
-    setVisited(prev => ({ ...prev, [idx]: true }));
-    setAnswered(!!submittedMap[idx]);
-  }, [idx, submittedMap]);
-
-
+  /* SUBMIT ANSWER */
   const submitAnswer = async () => {
-    if (!answer.trim() || submittedMap[idx]) return;
+    if (!userAnswer.trim() || submitting || !activeQuestion) return;
+
+    const nodeId = selectedNode.id;
+    setSubmitting(true);
+
+    const payload = {
+      questionId: activeQuestion.questionId,
+      answer: userAnswer.trim(),
+    };
 
     try {
-      const token = localStorage.getItem("BLOCKVERSE_TOKEN");
-
       const res = await fetch(
         "https://blockverse-backend.onrender.com/api/round2/phase1/submit",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${localStorage.getItem("BLOCKVERSE_TOKEN")}`,
           },
-          body: JSON.stringify({
-            questionId: questions[idx].questionId,
-            answer: Number(answer),
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
-      if (res.ok) {
-        addPoints(100);
-        addTokens(1);
-        setSessionPoints(p => p + 100);
-        setSessionTokens(t => t + 1);
-        setSubmittedMap(prev => ({ ...prev, [idx]: true }));
+      const json = await res.json();
+
+      /* WRONG ANSWER */
+      if (!res.ok) {
+        alert("Incorrect Answer ❌");
+
+        setNodes((prev) => {
+          const copy = [...prev];
+          copy[nodeId].status = "blocked"; // RED
+          return copy;
+        });
+
+        return closeModal();
       }
-    } catch {
-      console.warn("Submission failed");
+
+      /* CORRECT ANSWER */
+      alert("Correct Answer 🎉");
+
+      setNodes((prev) => {
+        const copy = [...prev];
+        copy[nodeId].status = "unlocked"; // GREEN
+        return copy;
+      });
+
+      if (json.data?.tokens !== undefined) {
+        setTokens(json.data.tokens);
+      }
+
+      closeModal();
+    } catch (error) {
+      alert("Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
-
-    setAnswered(true);
   };
 
-
-  const goToQuestion = (i) => {
-    setIdx(i);
-    setAnswer("");
+  /* CLOSE MODAL */
+  const closeModal = () => {
+    setSelectedNode(null);
+    setActiveQuestion(null);
+    setUserAnswer("");
+    setSubmitting(false);
   };
 
-  if (!questions.length) {
-    return <div className="p-6 text-neon-cyan">LOADING ROUND 2…</div>;
+  if (error) {
+    return <div className="p-6 text-red-500">{error}</div>;
   }
+
+  const unlockedCount = nodes.filter((n) => n.status === "unlocked").length;
+
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      
-      {/* HEADER */}
-      <div className="flex justify-between items-center p-6">
-        <GlitchText text="ROUND 2 // NUMERICAL CORE" as="h2" />
-        <div className={`flex items-center gap-2 px-4 py-2 border ${
-          timer <= 10 ? "border-red-500 text-red-500 animate-pulse" : "border-neon-cyan text-neon-cyan"
-        }`}>
-          <Clock size={16} />
-          {String(Math.floor(timer / 60)).padStart(2,"0")}:
-          {String(timer % 60).padStart(2,"0")}
+    <div className="flex-1 pt-12 px-6 flex gap-8 overflow-hidden">
+      {/* GRID */}
+      <div className="flex-1 max-h-[88vh] overflow-y-auto">
+        <div className="grid grid-cols-5 grid-rows-4 gap-3">
+          {nodes.map((node) => (
+            <Motion.button
+              key={node.id}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleNodeClick(node)}
+              className={`aspect-square border-2 flex items-center justify-center transition-all
+                ${
+                  node.status === "unlocked"
+                    ? "border-neon-green bg-neon-green/10 text-neon-green"
+                    : node.status === "blocked"
+                    ? "border-red-500 bg-red-500/20 text-red-400 cursor-not-allowed"
+                    : "border-cyan-500 bg-cyan-500/10 text-cyan-500 animate-pulse"
+                }`}
+            >
+              {node.status === "unlocked" ? (
+                <Unlock size={28} />
+              ) : node.status === "blocked" ? (
+                "❌"
+              ) : (
+                <Lock size={28} />
+              )}
+            </Motion.button>
+          ))}
         </div>
       </div>
 
-      {/* MAIN GRID */}
-      <div className="max-w-6xl mx-auto p-4 grid grid-cols-1 md:grid-cols-[1fr_280px] gap-6">
+      {/* SIDEBAR */}
+      <div className="w-80">
+        <TerminalCard title="ROUND 2 — PHASE 1" headerColor="cyan">
+          <div className="space-y-3 font-mono text-sm">
+            <p>STATUS: LOGIC GRID</p>
 
-        {/* QUESTION PANEL */}
-        <TerminalCard title={`QUESTION ${idx + 1}/${questions.length}`}>
-          <div className="space-y-6">
-            <p className="text-white text-xl font-mono">
-              {questions[idx].question}
+            <p>
+              SOLVED:{" "}
+              <span className="text-neon-green">
+                {unlockedCount}/{TOTAL_NODES}
+              </span>
             </p>
 
-            <input
-              type="text"
-              inputMode="numeric"
-              value={answer}
-              disabled={submittedMap[idx]}
-              onChange={e => setAnswer(e.target.value.replace(/[^0-9]/g, ""))}
-              placeholder="ENTER NUMERIC ANSWER"
-              className="w-full p-3 bg-black border border-neon-cyan text-white font-mono disabled:opacity-50"
-            />
+            <p className="text-yellow-300 text-xl">TOKENS: {tokens}</p>
 
-            <div className="flex justify-between">
-              <NeonButton onClick={submitAnswer} disabled={submittedMap[idx]}>
-                SUBMIT
-              </NeonButton>
-            </div>
-          </div>
-        </TerminalCard>
-
-        {/* QUESTION PALETTE */}
-        <TerminalCard title="QUESTION PALETTE">
-          <div className="grid grid-cols-5 gap-3">
-            {questions.map((_, i) => {
-              let bg = "bg-gray-700";
-              if (submittedMap[i]) bg = "bg-green-600";
-              else if (visited[i]) bg = "bg-yellow-500";
-
-              return (
-                <button
-                  key={i}
-                  onClick={() => goToQuestion(i)}
-                  className={`h-10 w-10 font-mono text-black flex items-center justify-center
-                    ${bg} ${i === idx ? "ring-2 ring-neon-cyan" : ""}
-                    hover:scale-105 transition`}
-                >
-                  {i + 1}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* LEGEND */}
-          <div className="mt-6 space-y-2 text-xs font-mono">
-            <div className="flex gap-2"><span className="w-3 h-3 bg-gray-700" /> Unvisited</div>
-            <div className="flex gap-2"><span className="w-3 h-3 bg-yellow-500" /> Visited</div>
-            <div className="flex gap-2"><span className="w-3 h-3 bg-green-600" /> Submitted</div>
+            <NeonButton
+              className="mt-4 w-full"
+              onClick={() => navigate("/round2/phase2")}
+            >
+              PROCEED TO PHASE 2 →
+            </NeonButton>
           </div>
         </TerminalCard>
       </div>
 
-      {/* INTRO MODAL */}
-      <Modal isOpen={introOpen} showClose={false} title="ANA // SYSTEM AI">
-        <div className="space-y-4">
-          <div className="p-4 border border-neon-cyan bg-black font-mono text-neon-cyan">
-            {INTRO_MESSAGES[introStep]}
-          </div>
-          <div className="flex justify-end gap-3">
-            {introStep < INTRO_MESSAGES.length - 1 ? (
-              <NeonButton onClick={() => {
-                const n = introStep + 1;
-                setIntroStep(n);
-                setAnaDialogue(INTRO_MESSAGES[n]);
-              }}>
-                NEXT
-              </NeonButton>
-            ) : (
-              <NeonButton onClick={() => {
-                setIntroOpen(false);
-                setAnaVisible(true);
-                setAnaDialogue("Numerical protocol engaged.");
-              }}>
-                START
-              </NeonButton>
-            )}
-          </div>
-        </div>
-      </Modal>
+      {/* QUESTION MODAL */}
+      <Modal
+        isOpen={!!selectedNode}
+        onClose={closeModal}
+        title={`TASK ${(selectedNode?.id ?? 0) + 1}`}
+      >
+        {activeQuestion && (
+          <>
+            <p className="text-neon-cyan font-mono mb-4">
+              {activeQuestion.question}
+            </p>
 
-      {/* MARKET MODAL */}
-      <Modal isOpen={marketOpen} fullScreen title="ANA // SYSTEM AI">
-        <div className="h-full flex items-center justify-center">
-          <div className="text-center space-y-6">
-            <CheckCircle size={72} className="text-neon-green mx-auto" />
-            <h2 className="text-3xl text-white font-orbitron">MARKET UNLOCKED</h2>
+            {/* FREE TEXT INPUT */}
+            <input
+              type="text"
+              value={userAnswer}
+              onChange={(e) => setUserAnswer(e.target.value)}
+              placeholder="Enter your answer..."
+              className="w-full p-2 border border-neon-cyan bg-black text-white font-mono"
+            />
 
-            <div className="flex gap-6 justify-center">
-              <div className="text-neon-green font-mono"><Coins /> {sessionPoints}</div>
-              <div className="text-neon-cyan font-mono">Tokens {sessionTokens}</div>
+            <div className="flex gap-3 mt-6">
+              <NeonButton variant="danger" onClick={closeModal}>
+                ABORT
+              </NeonButton>
+
+              <NeonButton
+                onClick={submitAnswer}
+                disabled={!userAnswer.trim() || submitting}
+              >
+                {submitting ? "SUBMITTING..." : "EXECUTE"}
+              </NeonButton>
             </div>
-
-            <NeonButton onClick={() => {
-              setMarketOpen(false);
-              setPostAnaOpen(true);
-            }}>
-              CONTINUE
-            </NeonButton>
-          </div>
-        </div>
-      </Modal>
-
-      {/* POST ANA */}
-      <Modal isOpen={postAnaOpen} showClose={false} title="ANA // SYSTEM AI">
-        <div className="space-y-4">
-          <div className="p-4 border border-neon-cyan bg-black font-mono text-neon-cyan">
-            {POST_ANA_MESSAGES[postAnaStep]}
-          </div>
-          <div className="flex justify-end gap-3">
-            {postAnaStep < POST_ANA_MESSAGES.length - 1 ? (
-              <NeonButton onClick={() => setPostAnaStep(s => s + 1)}>
-                NEXT
-              </NeonButton>
-            ) : (
-              <NeonButton onClick={() => navigate("/market")}>
-                OPEN MARKET
-              </NeonButton>
-            )}
-          </div>
-        </div>
+          </>
+        )}
       </Modal>
     </div>
   );
 };
 
-export default Round2;
+export default Round2Phase1;

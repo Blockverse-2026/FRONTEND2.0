@@ -38,7 +38,9 @@ function App() {
               <Route path="/round1" element={<Round1 />} />
               <Route path="/round2/phase1" element={<Round2 />} />
               <Route path="/round3" element={<Round3 />} />
-              <Route path="/round2/market" element={<BlackMarket />} />
+              {/* <Route path="/round2/market" element={<BlackMarket />} /> */}
+              <Route path="/round2/phase2" element={<BlackMarket />} />
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

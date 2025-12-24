@@ -46,7 +46,7 @@ const Modal = ({
             >
               {children}
 
-              {showClose && (
+              {/* {showClose && (
                 <div className="mt-6 flex justify-end">
                   <NeonButton
                     variant="secondary"
@@ -56,7 +56,7 @@ const Modal = ({
                     Close
                   </NeonButton>
                 </div>
-              )}
+              )} */}
             </TerminalCard>
           </Motion.div>
         </div>
