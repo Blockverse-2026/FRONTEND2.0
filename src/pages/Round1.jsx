@@ -35,6 +35,28 @@ const Round1 = () => {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem("BLOCKVERSE_TOKEN");
+    fetch("https://blockverse-backend.onrender.com/api/round1/progress", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.data?.solved || data.data.solved.length === 0) {
+          // backend says no progress → clear localStorage
+          localStorage.removeItem("round1_nodes");
+          localStorage.removeItem("round1_score");
+          setNodes(
+            Array.from({ length: TOTAL_NODES }, (_, i) => ({
+              id: i,
+              status: "locked",
+            }))
+          );
+          setScore(0);
+        }
+      });
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem("round1_nodes", JSON.stringify(nodes));
   }, [nodes]);
 
