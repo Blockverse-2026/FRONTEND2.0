@@ -8,15 +8,15 @@ import Modal from "../components/Modal";
 const TOTAL_NODES = 50;
 
 const Round1 = () => {
- 
   const [questions, setQuestions] = useState([]);
   const [nodes, setNodes] = useState(
     Array.from({ length: TOTAL_NODES }, (_, i) => ({
       id: i,
-      status: "locked",
+      status: "locked", // locked | unlocked | blocked
     }))
   );
 
+  const [score, setScore] = useState(0);
   const [selectedNode, setSelectedNode] = useState(null);
   const [activeQuestion, setActiveQuestion] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -50,7 +50,7 @@ const Round1 = () => {
   }, []);
 
   const handleNodeClick = (node) => {
-    if (node.status === "unlocked") return;
+    if (node.status === "unlocked" || node.status === "blocked") return;
 
     const q = questions[node.id];
     if (!q) return;
@@ -60,15 +60,31 @@ const Round1 = () => {
     setSelectedIndex(null);
   };
 
+  // ---------- BLOCK NODE ----------
+  const blockNode = (id) => {
+    setNodes((prev) => {
+      const copy = [...prev];
+      copy[id].status = "blocked";
+      return copy;
+    });
+  };
+
+  // ---------- SUBMIT ANSWER ----------
   const submitAnswer = async () => {
     if (selectedIndex === null || !activeQuestion || submitting) return;
+
+    // prevent answering again
+    if (
+      nodes[selectedNode.id].status === "unlocked" ||
+      nodes[selectedNode.id].status === "blocked"
+    )
+      return;
 
     setSubmitting(true);
 
     const payload = {
       questionId: activeQuestion.questionId,
-      year: activeQuestion.year,
-      answer: activeQuestion.options[selectedIndex],
+      selectedOption: activeQuestion.options[selectedIndex],
     };
 
     try {
@@ -84,18 +100,35 @@ const Round1 = () => {
         }
       );
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Submission failed");
+      const json = await res.json();
+      console.log("Response:", json);
 
-      setNodes((prev) => {
-        const copy = [...prev];
-        copy[selectedNode.id].status = "unlocked";
-        return copy;
-      });
+      // ---- WRONG ANSWER (backend sends correct:false) ----
+      if (json.data?.correct === false) {
+        alert("Incorrect Answer ❌");
+        blockNode(selectedNode.id);
+        return closeModal();
+      }
+
+      // ---- CORRECT ANSWER ----
+      if (json.data?.correct === true || json.data?.points > 0) {
+        alert("Correct Answer 🎉");
+
+        setNodes((prev) => {
+          const copy = [...prev];
+          copy[selectedNode.id].status = "unlocked";
+          return copy;
+        });
+
+        if (json.data?.points) {
+          setScore((prev) => prev + json.data.points);
+        }
+      }
 
       closeModal();
     } catch (err) {
-      alert(err.message);
+      alert("Something went wrong");
+    } finally {
       setSubmitting(false);
     }
   };
@@ -115,7 +148,7 @@ const Round1 = () => {
 
   return (
     <div className="flex-1 pt-12 px-6 flex gap-8 overflow-hidden">
-      {/* ================= GRID ================= */}
+      {/* GRID */}
       <div className="flex-1 max-h-[88vh] overflow-y-auto">
         <div className="grid grid-cols-5 grid-rows-10 gap-3">
           {nodes.map((node) => (
@@ -128,16 +161,24 @@ const Round1 = () => {
                 ${
                   node.status === "unlocked"
                     ? "border-neon-green bg-neon-green/10 text-neon-green"
+                    : node.status === "blocked"
+                    ? "border-gray-500 bg-gray-800 text-gray-500 cursor-not-allowed"
                     : "border-red-500 bg-red-500/10 text-red-500 animate-pulse"
                 }`}
             >
-              {node.status === "unlocked" ? <Unlock size={28} /> : <Lock size={28} />}
+              {node.status === "unlocked" ? (
+                <Unlock size={28} />
+              ) : node.status === "blocked" ? (
+                "🚫"
+              ) : (
+                <Lock size={28} />
+              )}
             </Motion.button>
           ))}
         </div>
       </div>
 
-      {/* ================= SIDE PANEL ================= */}
+      {/* SIDE PANEL */}
       <div className="w-80">
         <TerminalCard title="ROUND 1 STATUS" headerColor="red">
           <div className="space-y-3 font-mono text-sm">
@@ -152,11 +193,12 @@ const Round1 = () => {
               <Clock size={14} />
               <span>TIME LIMITED ROUND</span>
             </div>
+            <p className="text-neon-green text-xl">SCORE: {score}</p>
           </div>
         </TerminalCard>
       </div>
 
-      {/* ================= QUESTION MODAL ================= */}
+      {/* QUESTION MODAL */}
       <Modal
         isOpen={!!selectedNode}
         onClose={closeModal}
@@ -173,7 +215,7 @@ const Round1 = () => {
                 <button
                   key={idx}
                   onClick={() => setSelectedIndex(idx)}
-                  className={`w-full p-2 border text-left font-mono transition-all
+                  className={`w-full p-2 border text-left font-mono
                     ${
                       selectedIndex === idx
                         ? "border-neon-green bg-neon-green/10"
