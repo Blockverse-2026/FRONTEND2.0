@@ -1,10 +1,8 @@
-
 import React, { useEffect, useState } from "react";
-import { Lock, Unlock } from "lucide-react";
-import { motion as Motion } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
+import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
 import TerminalCard from "../components/TerminalCard";
 import NeonButton from "../components/NeonButton";
-import Modal from "../components/Modal";
 import { useNavigate } from "react-router-dom";
 
 const TOTAL_NODES = 20;
@@ -16,19 +14,17 @@ const Round2Phase1 = () => {
   const [nodes, setNodes] = useState(
     Array.from({ length: TOTAL_NODES }, (_, i) => ({
       id: i,
-      status: "locked", // locked | unlocked | blocked
+      status: "locked", 
     }))
   );
 
   const [tokens, setTokens] = useState(0);
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [activeQuestion, setActiveQuestion] = useState(null);
-
-  const [userAnswer, setUserAnswer] = useState(""); // ← FREE TEXT INPUT
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [userAnswer, setUserAnswer] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState(null);
   const [error, setError] = useState(null);
 
-  /* RESTORE LOCAL STORAGE */
   useEffect(() => {
     const savedNodes = localStorage.getItem("round2_phase1_nodes");
     const savedTokens = localStorage.getItem("round2_phase1_tokens");
@@ -37,7 +33,6 @@ const Round2Phase1 = () => {
     if (savedTokens) setTokens(parseInt(savedTokens));
   }, []);
 
-  /* SAVE LOCAL STORAGE */
   useEffect(() => {
     localStorage.setItem("round2_phase1_nodes", JSON.stringify(nodes));
   }, [nodes]);
@@ -46,12 +41,10 @@ const Round2Phase1 = () => {
     localStorage.setItem("round2_phase1_tokens", tokens.toString());
   }, [tokens]);
 
-  /* FETCH QUESTIONS */
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         const token = localStorage.getItem("BLOCKVERSE_TOKEN");
-
         const res = await fetch(
           "https://blockverse-backend.onrender.com/api/round2/phase1/questions",
           {
@@ -63,9 +56,7 @@ const Round2Phase1 = () => {
         if (!res.ok || !json?.data?.questions)
           throw new Error("Failed to load questions");
 
-        const sorted = json.data.questions.sort((a, b) => a.order - b.order);
-
-        setQuestions(sorted);
+        setQuestions(json.data.questions.sort((a, b) => a.order - b.order));
       } catch (err) {
         setError(err.message);
       }
@@ -74,29 +65,16 @@ const Round2Phase1 = () => {
     fetchQuestions();
   }, []);
 
-  /* CLICK NODE */
-  const handleNodeClick = (node) => {
-    if (node.status === "unlocked" || node.status === "blocked") return;
-
-    const q = questions.find((q) => q.order === node.id + 1);
-    if (!q) return;
-
-    setSelectedNode(node);
-    setActiveQuestion(q);
-    setUserAnswer(""); // reset input
-  };
-
-  /* SUBMIT ANSWER */
   const submitAnswer = async () => {
-    if (!userAnswer.trim() || submitting || !activeQuestion) return;
+    if (
+      !userAnswer.trim() ||
+      submitting ||
+      nodes[currentIndex].status !== "locked"
+    )
+      return;
 
-    const nodeId = selectedNode.id;
     setSubmitting(true);
-
-    const payload = {
-      questionId: activeQuestion.questionId,
-      answer: userAnswer.trim(),
-    };
+    setFeedback(null);
 
     try {
       const res = await fetch(
@@ -107,105 +85,169 @@ const Round2Phase1 = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("BLOCKVERSE_TOKEN")}`,
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            questionId: questions[currentIndex].questionId,
+            answer: userAnswer.trim(),
+          }),
         }
       );
 
       const json = await res.json();
 
-      /* WRONG ANSWER */
-      if (!res.ok) {
-        alert("Incorrect Answer ❌");
-
-        setNodes((prev) => {
-          const copy = [...prev];
-          copy[nodeId].status = "blocked"; // RED
-          return copy;
-        });
-
-        return closeModal();
-      }
-
-      /* CORRECT ANSWER */
-      alert("Correct Answer 🎉");
+      const isCorrect =
+        res.ok &&
+        (json.message === "Correct answer" ||
+          json.message === "Already solved" ||
+          json.success === true);
 
       setNodes((prev) => {
         const copy = [...prev];
-        copy[nodeId].status = "unlocked"; // GREEN
+        copy[currentIndex].status = isCorrect ? "unlocked" : "blocked";
         return copy;
       });
 
-      if (json.data?.tokens !== undefined) {
-        setTokens(json.data.tokens);
+      if (isCorrect) {
+        setFeedback("correct");
+        setTokens((prev) => prev + 1); 
+      } else {
+        setFeedback("incorrect");
       }
 
-      closeModal();
-    } catch (error) {
-      alert("Something went wrong");
+      setTimeout(() => {
+        if (currentIndex < TOTAL_NODES - 1) {
+          setCurrentIndex((i) => i + 1);
+          setUserAnswer("");
+          setFeedback(null);
+        }
+      }, 700);
+    } catch {
+      setFeedback("error");
     } finally {
       setSubmitting(false);
     }
   };
-
-  /* CLOSE MODAL */
-  const closeModal = () => {
-    setSelectedNode(null);
-    setActiveQuestion(null);
-    setUserAnswer("");
-    setSubmitting(false);
+  const goPrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((i) => i - 1);
+      setUserAnswer("");
+      setFeedback(null);
+    }
   };
 
-  if (error) {
-    return <div className="p-6 text-red-500">{error}</div>;
-  }
+  const goNext = () => {
+    if (currentIndex < TOTAL_NODES - 1) {
+      setCurrentIndex((i) => i + 1);
+      setUserAnswer("");
+      setFeedback(null);
+    }
+  };
 
-  const unlockedCount = nodes.filter((n) => n.status === "unlocked").length;
+  if (error) return <div className="p-6 text-red-500">{error}</div>;
+  if (!questions.length) return null;
+
+  const solved = nodes.filter((n) => n.status === "unlocked").length;
+  const progress = ((currentIndex + 1) / TOTAL_NODES) * 100;
+  const isLocked = nodes[currentIndex].status !== "locked";
 
   return (
-    <div className="flex-1 pt-12 px-6 flex gap-8 overflow-hidden">
-      {/* GRID */}
-      <div className="flex-1 max-h-[88vh] overflow-y-auto">
-        <div className="grid grid-cols-5 grid-rows-4 gap-3">
-          {nodes.map((node) => (
-            <Motion.button
-              key={node.id}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleNodeClick(node)}
-              className={`aspect-square border-2 flex items-center justify-center transition-all
-                ${
-                  node.status === "unlocked"
-                    ? "border-neon-green bg-neon-green/10 text-neon-green"
-                    : node.status === "blocked"
-                    ? "border-red-500 bg-red-500/20 text-red-400 cursor-not-allowed"
-                    : "border-cyan-500 bg-cyan-500/10 text-cyan-500 animate-pulse"
-                }`}
-            >
-              {node.status === "unlocked" ? (
-                <Unlock size={28} />
-              ) : node.status === "blocked" ? (
-                "❌"
-              ) : (
-                <Lock size={28} />
-              )}
-            </Motion.button>
-          ))}
-        </div>
+    <div className="flex-1 pt-12 px-6 flex gap-8">
+      {/* QUESTION AREA */}
+      <div className="flex-1 flex justify-center">
+        <AnimatePresence mode="wait">
+          <Motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-4xl"
+          >
+            <TerminalCard title="TECH KNOWLEDGE BASE">
+              {/* PROGRESS */}
+              <div className="flex items-center gap-4 mb-6 font-mono text-sm text-neon-cyan/70">
+                <span>
+                  Q {currentIndex + 1}/{TOTAL_NODES}
+                </span>
+                <div className="flex-1 h-1 bg-gray-800 rounded">
+                  <Motion.div
+                    className="h-full bg-neon-cyan"
+                    animate={{ width: `${progress}%` }}
+                  />
+                </div>
+                <Activity size={16} />
+              </div>
+
+              {/* QUESTION */}
+              <h3 className="text-2xl font-orbitron text-white text-center mb-8">
+                {questions[currentIndex].question}
+              </h3>
+
+              {/* INPUT */}
+              <input
+                type="text"
+                value={userAnswer}
+                disabled={isLocked}
+                onChange={(e) => setUserAnswer(e.target.value)}
+                placeholder="Enter your answer..."
+                className={`w-full p-4 bg-black border-2 font-mono text-white
+                  ${
+                    isLocked
+                      ? "border-gray-700 opacity-50"
+                      : "border-neon-cyan/40"
+                  }`}
+              />
+
+              {/* FEEDBACK */}
+              <div className="mt-4 font-mono text-sm h-5">
+                {feedback === "correct" && (
+                  <span className="text-neon-green">✔ Correct (+1 TOKEN)</span>
+                )}
+                {feedback === "incorrect" && (
+                  <span className="text-red-500">✖ Incorrect</span>
+                )}
+              </div>
+
+              {/* CONTROLS */}
+              <div className="mt-10 flex justify-between items-center">
+                <NeonButton
+                  className="w-40"
+                  variant="secondary"
+                  onClick={goPrev}
+                  disabled={currentIndex === 0}
+                >
+                  <ChevronLeft size={16} /> PREVIOUS
+                </NeonButton>
+
+                <NeonButton
+                  className="w-40"
+                  onClick={submitAnswer}
+                  disabled={isLocked || submitting || !userAnswer.trim()}
+                >
+                  EXECUTE
+                </NeonButton>
+
+                <NeonButton
+                  className="w-40"
+                  variant="secondary"
+                  onClick={goNext}
+                  disabled={currentIndex === TOTAL_NODES - 1}
+                >
+                  NEXT <ChevronRight size={16} />
+                </NeonButton>
+              </div>
+            </TerminalCard>
+          </Motion.div>
+        </AnimatePresence>
       </div>
 
       {/* SIDEBAR */}
       <div className="w-80">
         <TerminalCard title="ROUND 2 — PHASE 1" headerColor="cyan">
           <div className="space-y-3 font-mono text-sm">
-            <p>STATUS: LOGIC GRID</p>
-
             <p>
               SOLVED:{" "}
               <span className="text-neon-green">
-                {unlockedCount}/{TOTAL_NODES}
+                {solved}/{TOTAL_NODES}
               </span>
             </p>
-
             <p className="text-yellow-300 text-xl">TOKENS: {tokens}</p>
 
             <NeonButton
@@ -217,43 +259,6 @@ const Round2Phase1 = () => {
           </div>
         </TerminalCard>
       </div>
-
-      {/* QUESTION MODAL */}
-      <Modal
-        isOpen={!!selectedNode}
-        onClose={closeModal}
-        title={`TASK ${(selectedNode?.id ?? 0) + 1}`}
-      >
-        {activeQuestion && (
-          <>
-            <p className="text-neon-cyan font-mono mb-4">
-              {activeQuestion.question}
-            </p>
-
-            {/* FREE TEXT INPUT */}
-            <input
-              type="text"
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              placeholder="Enter your answer..."
-              className="w-full p-2 border border-neon-cyan bg-black text-white font-mono"
-            />
-
-            <div className="flex gap-3 mt-6">
-              <NeonButton variant="danger" onClick={closeModal}>
-                ABORT
-              </NeonButton>
-
-              <NeonButton
-                onClick={submitAnswer}
-                disabled={!userAnswer.trim() || submitting}
-              >
-                {submitting ? "SUBMITTING..." : "EXECUTE"}
-              </NeonButton>
-            </div>
-          </>
-        )}
-      </Modal>
     </div>
   );
 };

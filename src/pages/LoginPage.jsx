@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
+
 import TerminalCard from '../components/TerminalCard';
 import NeonButton from '../components/NeonButton';
 import { useGame } from '../context/GameContext';
@@ -12,6 +14,7 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({ teamId: '', password: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [processMessage, setProcessMessage] = useState("Verifying Credentials");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     setAnaDialogue("Authentication required. Please enter Team ID.");
@@ -43,7 +46,6 @@ const LoginPage = () => {
       }
 
       const accessToken = data.data.accessToken;
-
       setProcessMessage("Accessing Genova Realm...");
 
       setTimeout(() => {
@@ -107,15 +109,26 @@ const LoginPage = () => {
               <label className="block text-neon-cyan font-mono text-sm mb-2">
                 PASSWORD
               </label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                className="w-full bg-black/50 border border-neon-cyan/30 text-white p-3 font-mono focus:border-neon-cyan focus:outline-none"
-                placeholder="********"
-              />
+
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  className="w-full bg-black/50 border border-neon-cyan/30 text-white p-3 pr-12 font-mono focus:border-neon-cyan focus:outline-none"
+                  placeholder="********"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neon-cyan/70 hover:text-neon-cyan"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             <NeonButton type="submit" className="w-full">
