@@ -6,6 +6,32 @@ import NeonButton from "../components/NeonButton";
 import Modal from "../components/Modal";
 import { useGame } from "../context/GameContext";
 
+
+const getRiskMeta = (cost) => {
+  if (cost >= 5)
+    return {
+      label: "HIGH",
+      text: "text-red-500",
+      border: "border-red-500/50",
+      glow: "hover:shadow-[0_0_30px_rgba(239,68,68,0.35)]",
+    };
+
+  if (cost >= 3)
+    return {
+      label: "MEDIUM",
+      text: "text-yellow-400",
+      border: "border-yellow-400/50",
+      glow: "hover:shadow-[0_0_30px_rgba(250,204,21,0.35)]",
+    };
+
+  return {
+    label: "LOW",
+    text: "text-neon-green",
+    border: "border-neon-green/50",
+    glow: "hover:shadow-[0_0_30px_rgba(16,255,120,0.35)]",
+  };
+};
+
 const BlackMarket = () => {
   const navigate = useNavigate();
   const { addTokens, completeRound } = useGame();
@@ -28,9 +54,7 @@ const BlackMarket = () => {
           "https://blockverse-backend.onrender.com/api/round2/phase2/store",
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem(
-                "BLOCKVERSE_TOKEN"
-              )}`,
+              Authorization: `Bearer ${localStorage.getItem("BLOCKVERSE_TOKEN")}`,
             },
           }
         );
@@ -51,7 +75,9 @@ const BlackMarket = () => {
     fetchStore();
   }, []);
 
-
+  /* =======================
+     BUY CLUE
+  ======================= */
   const buyClue = async () => {
     if (!selectedClue) return;
 
@@ -65,9 +91,7 @@ const BlackMarket = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem(
-              "BLOCKVERSE_TOKEN"
-            )}`,
+            Authorization: `Bearer ${localStorage.getItem("BLOCKVERSE_TOKEN")}`,
           },
           body: JSON.stringify({
             clueId: selectedClue._id,
@@ -81,9 +105,8 @@ const BlackMarket = () => {
         throw new Error(json.message || "Purchase failed");
       }
 
-      
       setTokens(json.data.tokensAvailable);
-      addTokens(json.data.tokensAvailable);
+      addTokens(-selectedClue.tokenCost);
 
       setOwnedClues((prev) => new Set(prev).add(selectedClue._id));
     } catch (err) {
@@ -107,13 +130,13 @@ const BlackMarket = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto p-6 md:p-10">
         {/* HEADER */}
-        <div className="mb-8">
+        <div className="mb-10">
           <GlitchText text="BLACK MARKET" as="h2" size="large" />
-          <div className="mt-2 font-mono text-neon-cyan/80">
+          <p className="mt-2 font-mono text-neon-cyan/80">
             Knowledge has a price.
-          </div>
+          </p>
 
-          <div className="mt-4 flex justify-between items-center">
+          <div className="mt-6 flex justify-between items-center">
             <div className="px-4 py-2 border border-neon-cyan/40 bg-black/60">
               <span className="text-xs font-mono text-neon-cyan/70">
                 TOKENS
@@ -135,40 +158,52 @@ const BlackMarket = () => {
           </div>
         </div>
 
-        {/* CLUES GRID */}
+        {/* CLUE GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {clues.map((clue) => {
             const owned = ownedClues.has(clue._id);
+            const risk = getRiskMeta(clue.tokenCost);
 
             return (
               <Motion.div
                 key={clue._id}
-                whileHover={{ scale: 1.03 }}
-                className="p-5 bg-black/50 border border-neon-cyan/40 rounded-sm cursor-pointer relative"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                className={`relative p-6 border-2 rounded-sm cursor-pointer transition-all
+                  ${
+                    owned
+                      ? "border-neon-green bg-neon-green/10"
+                      : `${risk.border} bg-black/50 ${risk.glow}`
+                  }`}
                 onClick={() => {
                   setSelectedClue(clue);
                   setClueModalOpen(true);
                 }}
               >
-                <div className="font-orbitron text-white">
-                  {clue.title}
-                </div>
-
-                <div className="mt-3 font-mono text-neon-cyan/70">
-                  {clue.description.slice(0, 60)}...
-                </div>
-
-                <div className="mt-4 flex justify-between">
-                  <span className="text-neon-cyan font-orbitron">
-                    🪙 {clue.tokenCost}
+                <div className="flex justify-between items-start">
+                  <h3 className="font-orbitron text-lg text-white">
+                    {clue.title}
+                  </h3>
+                  <span className={`text-xs font-mono ${risk.text}`}>
+                    {risk.label} RISK
                   </span>
                 </div>
 
-                {owned && (
-                  <div className="absolute top-2 right-2 text-xs text-neon-green font-mono">
-                    OWNED
-                  </div>
-                )}
+                <p className="mt-4 font-mono text-neon-cyan/70">
+                  {clue.description.slice(0, 90)}...
+                </p>
+
+                <div className="mt-6 flex justify-between items-center">
+                  <span className="font-orbitron text-neon-gold">
+                    🪙 {clue.tokenCost}
+                  </span>
+
+                  {owned && (
+                    <span className="text-xs font-mono text-neon-green">
+                      OWNED
+                    </span>
+                  )}
+                </div>
               </Motion.div>
             );
           })}
