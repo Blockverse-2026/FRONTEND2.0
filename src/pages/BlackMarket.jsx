@@ -6,34 +6,6 @@ import NeonButton from "../components/NeonButton";
 import Modal from "../components/Modal";
 import { useGame } from "../context/GameContext";
 
-const ENCRYPTED_TEXT =
-  "████ █████ ███ █████ █████ ████ █████ ███ █████";
-
-const getRiskMeta = (cost) => {
-  if (cost >= 5)
-    return {
-      label: "HIGH",
-      text: "text-red-500",
-      border: "border-red-500/50",
-      glow: "hover:shadow-[0_0_30px_rgba(239,68,68,0.35)]",
-    };
-
-  if (cost >= 3)
-    return {
-      label: "MEDIUM",
-      text: "text-yellow-400",
-      border: "border-yellow-400/50",
-      glow: "hover:shadow-[0_0_30px_rgba(250,204,21,0.35)]",
-    };
-
-  return {
-    label: "LOW",
-    text: "text-neon-green",
-    border: "border-neon-green/50",
-    glow: "hover:shadow-[0_0_30px_rgba(16,255,120,0.35)]",
-  };
-};
-
 const BlackMarket = () => {
   const navigate = useNavigate();
   const { addTokens, completeRound } = useGame();
@@ -41,7 +13,6 @@ const BlackMarket = () => {
   const [clues, setClues] = useState([]);
   const [tokens, setTokens] = useState(0);
 
-  // 🔥 OWNERSHIP TRACKED BY clueId (IMPORTANT)
   const [ownedClues, setOwnedClues] = useState(new Set());
 
   const [selectedClue, setSelectedClue] = useState(null);
@@ -57,9 +28,7 @@ const BlackMarket = () => {
           "https://blockverse-backend.onrender.com/api/round2/phase2/store",
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem(
-                "BLOCKVERSE_TOKEN"
-              )}`,
+              Authorization: `Bearer ${localStorage.getItem("BLOCKVERSE_TOKEN")}`,
             },
           }
         );
@@ -80,9 +49,7 @@ const BlackMarket = () => {
     fetchStore();
   }, []);
 
-  /* =======================
-     BUY CLUE (CORRECT)
-  ======================= */
+
   const buyClue = async () => {
     if (!selectedClue) return;
 
@@ -96,12 +63,9 @@ const BlackMarket = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem(
-              "BLOCKVERSE_TOKEN"
-            )}`,
+            Authorization: `Bearer ${localStorage.getItem("BLOCKVERSE_TOKEN")}`,
           },
           body: JSON.stringify({
-            // ✅ Backend expects clueId STRING
             clueId: selectedClue.clueId,
           }),
         }
@@ -116,7 +80,6 @@ const BlackMarket = () => {
       setTokens(json.data.tokensAvailable);
       addTokens(-selectedClue.tokenCost);
 
-      // ✅ STORE OWNERSHIP BY clueId
       setOwnedClues((prev) => new Set(prev).add(selectedClue.clueId));
     } catch (err) {
       alert(err.message);
@@ -164,20 +127,13 @@ const BlackMarket = () => {
         {/* CLUE GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {clues.map((clue) => {
-            const owned = ownedClues.has(clue.clueId);
-            const risk = getRiskMeta(clue.tokenCost);
+            const owned = ownedClues.has(clue._id);
 
             return (
               <Motion.div
-                key={clue.clueId}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
-                className={`relative p-6 border-2 rounded-sm cursor-pointer transition-all
-                  ${
-                    owned
-                      ? "border-neon-green bg-neon-green/10"
-                      : `${risk.border} bg-black/50 ${risk.glow}`
-                  }`}
+                key={clue._id}
+                whileHover={{ scale: 1.03 }}
+                className="p-5 bg-black/50 border border-neon-cyan/40 rounded-sm cursor-pointer relative"
                 onClick={() => {
                   setSelectedClue(clue);
                   setClueModalOpen(true);
@@ -192,16 +148,9 @@ const BlackMarket = () => {
                   </span>
                 </div>
 
-                <p
-                  className={`mt-4 font-mono transition-all duration-300
-                    ${
-                      owned
-                        ? "text-neon-cyan/70"
-                        : "text-neon-cyan/50 blur-sm select-none"
-                    }`}
-                >
-                  {(clue.description || ENCRYPTED_TEXT).slice(0, 90)}...
-                </p>
+                <div className="mt-3 font-mono text-neon-cyan/70">
+                  {clue.description.slice(0, 60)}...
+                </div>
 
                 <div className="mt-6 flex justify-between items-center">
                   <span className="font-orbitron text-neon-gold">
@@ -250,7 +199,7 @@ const BlackMarket = () => {
                 CLOSE
               </NeonButton>
 
-              {/* 🔥 BUY BUTTON REMOVED AFTER ACQUISITION */}
+              
               {!ownedClues.has(selectedClue.clueId) && (
                 <NeonButton
                   onClick={buyClue}
@@ -264,7 +213,7 @@ const BlackMarket = () => {
         )}
       </Modal>
 
-      {/* CONFIRM MODAL */}
+      
       <Modal
         isOpen={confirmOpen}
         onClose={() => setConfirmOpen(false)}
