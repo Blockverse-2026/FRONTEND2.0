@@ -6,12 +6,42 @@ import NeonButton from "../components/NeonButton";
 import Modal from "../components/Modal";
 import { useGame } from "../context/GameContext";
 
+const ENCRYPTED_TEXT =
+  "████ █████ ███ █████ █████ ████ █████ ███ █████";
+
+const getRiskMeta = (cost) => {
+  if (cost >= 5)
+    return {
+      label: "HIGH",
+      text: "text-red-500",
+      border: "border-red-500/50",
+      glow: "hover:shadow-[0_0_30px_rgba(239,68,68,0.35)]",
+    };
+
+  if (cost >= 3)
+    return {
+      label: "MEDIUM",
+      text: "text-yellow-400",
+      border: "border-yellow-400/50",
+      glow: "hover:shadow-[0_0_30px_rgba(250,204,21,0.35)]",
+    };
+
+  return {
+    label: "LOW",
+    text: "text-neon-green",
+    border: "border-neon-green/50",
+    glow: "hover:shadow-[0_0_30px_rgba(16,255,120,0.35)]",
+  };
+};
+
 const BlackMarket = () => {
   const navigate = useNavigate();
   const { addTokens, completeRound } = useGame();
 
   const [clues, setClues] = useState([]);
   const [tokens, setTokens] = useState(0);
+
+  // 🔥 OWNERSHIP TRACKED BY clueId (IMPORTANT)
   const [ownedClues, setOwnedClues] = useState(new Set());
 
   const [selectedClue, setSelectedClue] = useState(null);
@@ -19,7 +49,6 @@ const BlackMarket = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState(null);
-
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -51,7 +80,9 @@ const BlackMarket = () => {
     fetchStore();
   }, []);
 
-
+  /* =======================
+     BUY CLUE (CORRECT)
+  ======================= */
   const buyClue = async () => {
     if (!selectedClue) return;
 
@@ -70,22 +101,23 @@ const BlackMarket = () => {
             )}`,
           },
           body: JSON.stringify({
-            clueId: selectedClue._id,
+            // ✅ Backend expects clueId STRING
+            clueId: selectedClue.clueId,
           }),
         }
       );
 
       const json = await res.json();
 
-      if (!res.ok || !json.success) {
+      if (!res.ok) {
         throw new Error(json.message || "Purchase failed");
       }
 
-      
       setTokens(json.data.tokensAvailable);
-      addTokens(json.data.tokensAvailable);
+      addTokens(-selectedClue.tokenCost);
 
-      setOwnedClues((prev) => new Set(prev).add(selectedClue._id));
+      // ✅ STORE OWNERSHIP BY clueId
+      setOwnedClues((prev) => new Set(prev).add(selectedClue.clueId));
     } catch (err) {
       alert(err.message);
     } finally {
@@ -99,21 +131,15 @@ const BlackMarket = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-black">
-      {/* BACKGROUND */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] opacity-30" />
-        <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/60 to-black opacity-80" />
-      </div>
-
       <div className="relative z-10 max-w-7xl mx-auto p-6 md:p-10">
         {/* HEADER */}
-        <div className="mb-8">
+        <div className="mb-10">
           <GlitchText text="BLACK MARKET" as="h2" size="large" />
-          <div className="mt-2 font-mono text-neon-cyan/80">
+          <p className="mt-2 font-mono text-neon-cyan/80">
             Knowledge has a price.
-          </div>
+          </p>
 
-          <div className="mt-4 flex justify-between items-center">
+          <div className="mt-6 flex justify-between items-center">
             <div className="px-4 py-2 border border-neon-cyan/40 bg-black/60">
               <span className="text-xs font-mono text-neon-cyan/70">
                 TOKENS
@@ -135,40 +161,59 @@ const BlackMarket = () => {
           </div>
         </div>
 
-        {/* CLUES GRID */}
+        {/* CLUE GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {clues.map((clue) => {
-            const owned = ownedClues.has(clue._id);
+            const owned = ownedClues.has(clue.clueId);
+            const risk = getRiskMeta(clue.tokenCost);
 
             return (
               <Motion.div
-                key={clue._id}
-                whileHover={{ scale: 1.03 }}
-                className="p-5 bg-black/50 border border-neon-cyan/40 rounded-sm cursor-pointer relative"
+                key={clue.clueId}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                className={`relative p-6 border-2 rounded-sm cursor-pointer transition-all
+                  ${
+                    owned
+                      ? "border-neon-green bg-neon-green/10"
+                      : `${risk.border} bg-black/50 ${risk.glow}`
+                  }`}
                 onClick={() => {
                   setSelectedClue(clue);
                   setClueModalOpen(true);
                 }}
               >
-                <div className="font-orbitron text-white">
-                  {clue.title}
-                </div>
-
-                <div className="mt-3 font-mono text-neon-cyan/70">
-                  {clue.description.slice(0, 60)}...
-                </div>
-
-                <div className="mt-4 flex justify-between">
-                  <span className="text-neon-cyan font-orbitron">
-                    🪙 {clue.tokenCost}
+                <div className="flex justify-between items-start">
+                  <h3 className="font-orbitron text-lg text-white">
+                    {clue.title}
+                  </h3>
+                  <span className={`text-xs font-mono ${risk.text}`}>
+                    {risk.label} RISK
                   </span>
                 </div>
 
-                {owned && (
-                  <div className="absolute top-2 right-2 text-xs text-neon-green font-mono">
-                    OWNED
-                  </div>
-                )}
+                <p
+                  className={`mt-4 font-mono transition-all duration-300
+                    ${
+                      owned
+                        ? "text-neon-cyan/70"
+                        : "text-neon-cyan/50 blur-sm select-none"
+                    }`}
+                >
+                  {(clue.description || ENCRYPTED_TEXT).slice(0, 90)}...
+                </p>
+
+                <div className="mt-6 flex justify-between items-center">
+                  <span className="font-orbitron text-neon-gold">
+                    🪙 {clue.tokenCost}
+                  </span>
+
+                  {owned && (
+                    <span className="text-xs font-mono text-neon-green">
+                      OWNED
+                    </span>
+                  )}
+                </div>
               </Motion.div>
             );
           })}
@@ -184,15 +229,18 @@ const BlackMarket = () => {
       >
         {selectedClue && (
           <div className="space-y-6">
-            {ownedClues.has(selectedClue._id) ? (
-              <div className="p-4 border border-neon-cyan/30 bg-black/50 font-mono text-neon-cyan">
-                {selectedClue.description}
-              </div>
-            ) : (
-              <div className="p-4 border border-neon-cyan/30 bg-black/50 font-mono text-neon-cyan/60">
-                Encrypted clue. Purchase to reveal.
-              </div>
-            )}
+            <div
+              className={`p-4 min-h-[120px] border border-neon-cyan/30 bg-black/50 font-mono whitespace-pre-wrap transition-all duration-300
+                ${
+                  ownedClues.has(selectedClue.clueId)
+                    ? "text-neon-cyan"
+                    : "text-neon-cyan/60 blur-md select-none"
+                }`}
+            >
+              {ownedClues.has(selectedClue.clueId)
+                ? selectedClue.description
+                : ENCRYPTED_TEXT}
+            </div>
 
             <div className="flex justify-end gap-3">
               <NeonButton
@@ -202,15 +250,15 @@ const BlackMarket = () => {
                 CLOSE
               </NeonButton>
 
-              <NeonButton
-                onClick={buyClue}
-                disabled={
-                  tokens < selectedClue.tokenCost ||
-                  ownedClues.has(selectedClue._id)
-                }
-              >
-                BUY CLUE
-              </NeonButton>
+              {/* 🔥 BUY BUTTON REMOVED AFTER ACQUISITION */}
+              {!ownedClues.has(selectedClue.clueId) && (
+                <NeonButton
+                  onClick={buyClue}
+                  disabled={verifying || tokens < selectedClue.tokenCost}
+                >
+                  {verifying ? "VERIFYING..." : "BUY CLUE"}
+                </NeonButton>
+              )}
             </div>
           </div>
         )}
