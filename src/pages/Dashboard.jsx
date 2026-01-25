@@ -24,27 +24,37 @@ const DASHBOARD_INTRO = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { gameState, setAnaDialogue, setAnaVisible, markIntroSeen } = useGame();
+
+  const {
+    gameState,
+    addPoints,
+    addTokens,
+    setAnaDialogue,
+    setAnaVisible,
+    markIntroSeen,
+  } = useGame();
+
   const pointsMV = useMotionValue(0);
   const tokensMV = useMotionValue(0);
+
   const [pointsDisplay, setPointsDisplay] = useState(0);
   const [tokensDisplay, setTokensDisplay] = useState(0);
   const [introOpen, setIntroOpen] = useState(false);
   const [introStep, setIntroStep] = useState(0);
+
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0 });
   const [reveal, setReveal] = useState(0);
   const starsRef = useRef([]);
 
-  // const isRound2Locked = !gameState.completedRounds.includes('round1');
-  const isRound2Locked = false; // 🔓 TEMP UNLOCK FOR TESTING
-
+  const isRound2Locked = false;
   const isRound3Locked = !gameState.completedRounds.includes("round2");
 
   const isRound1Complete = gameState.completedRounds.includes("round1");
   const isRound2Complete = gameState.completedRounds.includes("round2");
   const isRound3Complete = gameState.completedRounds.includes("round3");
+
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -56,23 +66,27 @@ const Dashboard = () => {
       }
       setAnaVisible(false);
     });
-  }, [setAnaDialogue, setAnaVisible, gameState.seenIntro]);
+  }, [gameState.seenIntro, setAnaDialogue, setAnaVisible]);
+
 
   useEffect(() => {
     const stopPoints = animate(pointsMV, gameState.points ?? 0, {
       duration: 0.6,
       ease: "easeOut",
     });
+
     const stopTokens = animate(tokensMV, gameState.tokens ?? 0, {
       duration: 0.6,
       ease: "easeOut",
     });
+
     const unsubPoints = pointsMV.on("change", (v) =>
       setPointsDisplay(Math.round(v))
     );
     const unsubTokens = tokensMV.on("change", (v) =>
       setTokensDisplay(Math.round(v))
     );
+
     return () => {
       stopPoints.stop();
       stopTokens.stop();
@@ -80,6 +94,56 @@ const Dashboard = () => {
       unsubTokens();
     };
   }, [gameState.points, gameState.tokens, pointsMV, tokensMV]);
+
+  
+  useEffect(() => {
+    const syncDashboard = async () => {
+      try {
+        const token = localStorage.getItem("BLOCKVERSE_TOKEN");
+        if (!token) return;
+
+        /* ---------- ROUND 1 POINTS ---------- */
+        const r1 = await fetch(
+          "https://blockverse-backend.onrender.com/api/round1/progress",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (r1.ok) {
+          const j1 = await r1.json();
+          const backendScore = j1?.data?.score;
+
+          if (typeof backendScore === "number") {
+            const diff = backendScore - gameState.points;
+            if (diff !== 0) addPoints(diff);
+          }
+        }
+
+        /* ---------- ROUND 2 TOKENS ---------- */
+        const r2 = await fetch(
+          "https://blockverse-backend.onrender.com/api/round2/progress",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (r2.ok) {
+          const j2 = await r2.json();
+          const backendTokens = j2?.data?.tokens;
+
+          if (typeof backendTokens === "number") {
+            const diff = backendTokens - gameState.tokens;
+            if (diff !== 0) addTokens(diff);
+          }
+        }
+      } catch (err) {
+        console.error("Dashboard sync failed:", err);
+      }
+    };
+
+    syncDashboard();
+  }, []); 
 
   useEffect(() => {
     if (starsRef.current.length === 0) {
@@ -91,21 +155,26 @@ const Dashboard = () => {
         vy: Math.random() * 0.08 + 0.02,
       }));
     }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
+
     const resize = () => {
       canvas.width = canvas.clientWidth;
       canvas.height = canvas.clientHeight;
     };
     resize();
+
     let raf;
     const loop = () => {
       const w = canvas.width;
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
+
       const px = mouseRef.current.x * 0.02;
       const py = mouseRef.current.y * 0.02;
+
       starsRef.current.forEach((s) => {
         s.x += s.vx * 0.0006;
         s.y += s.vy * 0.0006;
@@ -113,6 +182,7 @@ const Dashboard = () => {
         if (s.x > 1) s.x = 0;
         if (s.y < 0) s.y = 1;
         if (s.y > 1) s.y = 0;
+
         const x = s.x * w + px;
         const y = s.y * h + py;
         ctx.fillStyle = "rgba(255,255,255,0.9)";
@@ -120,13 +190,15 @@ const Dashboard = () => {
         ctx.arc(x, y, s.size, 0, Math.PI * 2);
         ctx.fill();
       });
+
       raf = requestAnimationFrame(loop);
     };
-    const onResize = () => resize();
-    window.addEventListener("resize", onResize);
+
+    window.addEventListener("resize", resize);
     loop();
+
     return () => {
-      window.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", resize);
       cancelAnimationFrame(raf);
     };
   }, []);
@@ -317,7 +389,9 @@ const Dashboard = () => {
                   isRound3Locked ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 variant="danger"
-                onClick={() => !isRound3Locked && navigate("/round3")}
+                // onClick={() => !isRound3Locked && navigate("/round3")}
+                onClick={() => navigate("/round3")}
+
               >
                 <div className="flex flex-col items-start">
                   <span>ROUND 3: ANOMALY</span>
@@ -445,6 +519,7 @@ const Dashboard = () => {
               >
                 CONTINUE
               </NeonButton>
+              
             )}
           </div>
         </div>
@@ -452,5 +527,7 @@ const Dashboard = () => {
     </>
   );
 };
+
+
 
 export default Dashboard;

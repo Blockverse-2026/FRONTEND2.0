@@ -14,7 +14,7 @@ const Round2Phase1 = () => {
   const [nodes, setNodes] = useState(
     Array.from({ length: TOTAL_NODES }, (_, i) => ({
       id: i,
-      status: "locked", 
+      status: "locked",
     }))
   );
 
@@ -30,7 +30,7 @@ const Round2Phase1 = () => {
     const savedTokens = localStorage.getItem("round2_phase1_tokens");
 
     if (savedNodes) setNodes(JSON.parse(savedNodes));
-    if (savedTokens) setTokens(parseInt(savedTokens));
+    if (savedTokens) setTokens(parseInt(savedTokens, 10));
   }, []);
 
   useEffect(() => {
@@ -94,11 +94,7 @@ const Round2Phase1 = () => {
 
       const json = await res.json();
 
-      const isCorrect =
-        res.ok &&
-        (json.message === "Correct answer" ||
-          json.message === "Already solved" ||
-          json.success === true);
+      const isCorrect = json?.message === "Correct answer";
 
       setNodes((prev) => {
         const copy = [...prev];
@@ -108,7 +104,7 @@ const Round2Phase1 = () => {
 
       if (isCorrect) {
         setFeedback("correct");
-        setTokens((prev) => prev + 1); 
+        setTokens((prev) => prev + 1);
       } else {
         setFeedback("incorrect");
       }
@@ -126,6 +122,7 @@ const Round2Phase1 = () => {
       setSubmitting(false);
     }
   };
+
   const goPrev = () => {
     if (currentIndex > 0) {
       setCurrentIndex((i) => i - 1);
@@ -161,7 +158,6 @@ const Round2Phase1 = () => {
             className="w-full max-w-4xl"
           >
             <TerminalCard title="TECH KNOWLEDGE BASE">
-              {/* PROGRESS */}
               <div className="flex items-center gap-4 mb-6 font-mono text-sm text-neon-cyan/70">
                 <span>
                   Q {currentIndex + 1}/{TOTAL_NODES}
@@ -175,27 +171,23 @@ const Round2Phase1 = () => {
                 <Activity size={16} />
               </div>
 
-              {/* QUESTION */}
               <h3 className="text-2xl font-orbitron text-white text-center mb-8">
                 {questions[currentIndex].question}
               </h3>
 
-              {/* INPUT */}
               <input
                 type="text"
                 value={userAnswer}
                 disabled={isLocked}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 placeholder="Enter your answer..."
-                className={`w-full p-4 bg-black border-2 font-mono text-white
-                  ${
-                    isLocked
-                      ? "border-gray-700 opacity-50"
-                      : "border-neon-cyan/40"
-                  }`}
+                className={`w-full p-4 bg-black border-2 font-mono text-white ${
+                  isLocked
+                    ? "border-gray-700 opacity-50"
+                    : "border-neon-cyan/40"
+                }`}
               />
 
-              {/* FEEDBACK */}
               <div className="mt-4 font-mono text-sm h-5">
                 {feedback === "correct" && (
                   <span className="text-neon-green">✔ Correct (+1 TOKEN)</span>
@@ -205,7 +197,6 @@ const Round2Phase1 = () => {
                 )}
               </div>
 
-              {/* CONTROLS */}
               <div className="mt-10 flex justify-between items-center">
                 <NeonButton
                   className="w-40"

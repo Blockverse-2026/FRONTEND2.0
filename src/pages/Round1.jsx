@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Lock, Unlock, Clock } from "lucide-react";
 import { motion as Motion } from "framer-motion";
@@ -27,6 +26,9 @@ const Round1 = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+
+  const [answerStatus, setAnswerStatus] = useState(null); // "correct" | "incorrect"
+
   useEffect(() => {
     const savedNodes = localStorage.getItem("round1_nodes");
     const savedScore = localStorage.getItem("round1_score");
@@ -43,7 +45,6 @@ const Round1 = () => {
       .then((res) => res.json())
       .then((data) => {
         if (!data.data?.solved || data.data.solved.length === 0) {
-          // backend says no progress → clear localStorage
           localStorage.removeItem("round1_nodes");
           localStorage.removeItem("round1_score");
           setNodes(
@@ -100,6 +101,7 @@ const Round1 = () => {
     setSelectedNode(node);
     setActiveQuestion(q);
     setSelectedIndex(null);
+    setAnswerStatus(null);
   };
 
   const blockNode = (id) => {
@@ -140,16 +142,21 @@ const Round1 = () => {
       );
 
       const json = await res.json();
-      console.log("Response:", json);
 
+      
       if (json.data?.correct === false) {
-        alert("Incorrect Answer ❌");
-        blockNode(selectedNode.id);
-        return closeModal();
+        setAnswerStatus("incorrect");
+
+        setTimeout(() => {
+          blockNode(selectedNode.id);
+          closeModal();
+        }, 800);
+        return;
       }
 
+      // ✅ CORRECT
       if (json.data?.correct === true || json.data?.points > 0) {
-        alert("Correct Answer 🎉");
+        setAnswerStatus("correct");
 
         setNodes((prev) => {
           const copy = [...prev];
@@ -160,11 +167,13 @@ const Round1 = () => {
         if (json.data?.points) {
           setScore((prev) => prev + json.data.points);
         }
-      }
 
-      closeModal();
+        setTimeout(() => {
+          closeModal();
+        }, 800);
+      }
     } catch (err) {
-      alert("Something went wrong");
+      console.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -175,6 +184,7 @@ const Round1 = () => {
     setActiveQuestion(null);
     setSelectedIndex(null);
     setSubmitting(false);
+    setAnswerStatus(null);
   };
 
   if (error) {
@@ -273,6 +283,21 @@ const Round1 = () => {
                 </button>
               ))}
             </div>
+
+            
+            {answerStatus && (
+              <div
+                className={`mt-4 text-center font-mono text-sm ${
+                  answerStatus === "correct"
+                    ? "text-neon-green"
+                    : "text-red-500"
+                }`}
+              >
+                {answerStatus === "correct"
+                  ? "✔ ACCESS GRANTED"
+                  : "✖ ACCESS DENIED"}
+              </div>
+            )}
 
             <div className="flex gap-3 mt-6">
               <NeonButton variant="danger" onClick={closeModal}>

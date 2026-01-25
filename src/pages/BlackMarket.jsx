@@ -6,21 +6,30 @@ import NeonButton from "../components/NeonButton";
 import Modal from "../components/Modal";
 import { useGame } from "../context/GameContext";
 
+const ENCRYPTED_TEXT = "████ █████ ███ █████ █████ ████ █████";
+
+const getRiskMeta = (cost) => {
+  if (cost >= 5) return { label: "HIGH", text: "text-red-500" };
+  if (cost >= 3) return { label: "MEDIUM", text: "text-yellow-400" };
+  return { label: "LOW", text: "text-neon-green" };
+};
+
 const BlackMarket = () => {
   const navigate = useNavigate();
-  const { addTokens, completeRound } = useGame();
+  const { addTokens } = useGame();
 
   const [clues, setClues] = useState([]);
   const [tokens, setTokens] = useState(0);
-
   const [ownedClues, setOwnedClues] = useState(new Set());
 
   const [selectedClue, setSelectedClue] = useState(null);
   const [clueModalOpen, setClueModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [transactionError, setTransactionError] = useState(null);
   const [error, setError] = useState(null);
 
+  
   useEffect(() => {
     const fetchStore = async () => {
       try {
@@ -49,12 +58,12 @@ const BlackMarket = () => {
     fetchStore();
   }, []);
 
-
+  /* ================= BUY CLUE ================= */
   const buyClue = async () => {
-    if (!selectedClue) return;
+    if (!selectedClue || verifying) return;
 
     setVerifying(true);
-    setConfirmOpen(true);
+    setTransactionError(null);
 
     try {
       const res = await fetch(
@@ -74,15 +83,16 @@ const BlackMarket = () => {
       const json = await res.json();
 
       if (!res.ok) {
-        throw new Error(json.message || "Purchase failed");
+        setTransactionError(json.message || "Insufficient balance");
+        return;
       }
 
       setTokens(json.data.tokensAvailable);
       addTokens(-selectedClue.tokenCost);
-
       setOwnedClues((prev) => new Set(prev).add(selectedClue.clueId));
-    } catch (err) {
-      alert(err.message);
+      setConfirmOpen(true);
+    } catch {
+      setTransactionError("Transaction failed");
     } finally {
       setVerifying(false);
     }
@@ -93,75 +103,52 @@ const BlackMarket = () => {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-black">
-      <div className="relative z-10 max-w-7xl mx-auto p-6 md:p-10">
-        {/* HEADER */}
-        <div className="mb-10">
-          <GlitchText text="BLACK MARKET" as="h2" size="large" />
-          <p className="mt-2 font-mono text-neon-cyan/80">
-            Knowledge has a price.
-          </p>
+    <div className="min-h-screen bg-black">
+      <div className="max-w-7xl mx-auto p-6 md:p-10">
+        <GlitchText text="BLACK MARKET" as="h2" size="large" />
 
-          <div className="mt-6 flex justify-between items-center">
-            <div className="px-4 py-2 border border-neon-cyan/40 bg-black/60">
-              <span className="text-xs font-mono text-neon-cyan/70">
-                TOKENS
-              </span>
-              <div className="font-orbitron text-2xl text-neon-cyan">
-                {tokens}
-              </div>
-            </div>
-
-            <NeonButton
-              variant="secondary"
-              onClick={() => {
-                completeRound("round2");
-                navigate("/dashboard");
-              }}
-            >
-              EXIT MARKET
-            </NeonButton>
+        <div className="mt-6 flex justify-between">
+          <div className="px-4 py-2 border border-neon-cyan/40">
+            <div className="text-xs text-neon-cyan/70">TOKENS</div>
+            <div className="text-2xl text-neon-cyan">{tokens}</div>
           </div>
+
+          <NeonButton variant="secondary" onClick={() => navigate("/dashboard")}>
+            EXIT MARKET
+          </NeonButton>
         </div>
 
-        {/* CLUE GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
           {clues.map((clue) => {
-            const owned = ownedClues.has(clue._id);
+            const owned = ownedClues.has(clue.clueId);
+            const risk = getRiskMeta(clue.tokenCost);
 
             return (
               <Motion.div
-                key={clue._id}
+                key={clue.clueId}
                 whileHover={{ scale: 1.03 }}
-                className="p-5 bg-black/50 border border-neon-cyan/40 rounded-sm cursor-pointer relative"
+                className="p-5 border border-neon-cyan/40 bg-black/50 cursor-pointer"
                 onClick={() => {
                   setSelectedClue(clue);
                   setClueModalOpen(true);
+                  setTransactionError(null);
                 }}
               >
-                <div className="flex justify-between items-start">
-                  <h3 className="font-orbitron text-lg text-white">
-                    {clue.title}
-                  </h3>
-                  <span className={`text-xs font-mono ${risk.text}`}>
-                    {risk.label} RISK
-                  </span>
+                <div className="flex justify-between">
+                  <h3 className="text-white">{clue.title}</h3>
+                  <span className={`text-xs ${risk.text}`}>{risk.label}</span>
                 </div>
 
-                <div className="mt-3 font-mono text-neon-cyan/70">
+                <div
+                  className={`mt-3 ${
+                    owned ? "" : "blur-sm select-none"
+                  } text-neon-cyan/60`}
+                >
                   {clue.description.slice(0, 60)}...
                 </div>
 
-                <div className="mt-6 flex justify-between items-center">
-                  <span className="font-orbitron text-neon-gold">
-                    🪙 {clue.tokenCost}
-                  </span>
-
-                  {owned && (
-                    <span className="text-xs font-mono text-neon-green">
-                      OWNED
-                    </span>
-                  )}
+                <div className="mt-4 text-neon-gold">
+                  🪙 {clue.tokenCost}
                 </div>
               </Motion.div>
             );
@@ -174,24 +161,29 @@ const BlackMarket = () => {
         isOpen={clueModalOpen}
         onClose={() => setClueModalOpen(false)}
         title={selectedClue?.title}
-        showClose={false}
+        showClose
       >
         {selectedClue && (
-          <div className="space-y-6">
+          <>
             <div
-              className={`p-4 min-h-[120px] border border-neon-cyan/30 bg-black/50 font-mono whitespace-pre-wrap transition-all duration-300
-                ${
-                  ownedClues.has(selectedClue.clueId)
-                    ? "text-neon-cyan"
-                    : "text-neon-cyan/60 blur-md select-none"
-                }`}
+              className={`p-4 border border-neon-cyan/30 bg-black/50 ${
+                ownedClues.has(selectedClue.clueId)
+                  ? ""
+                  : "blur-md select-none"
+              }`}
             >
               {ownedClues.has(selectedClue.clueId)
                 ? selectedClue.description
                 : ENCRYPTED_TEXT}
             </div>
 
-            <div className="flex justify-end gap-3">
+            {transactionError && (
+              <div className="mt-3 text-red-500 font-mono text-sm">
+                {transactionError}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 mt-6">
               <NeonButton
                 variant="secondary"
                 onClick={() => setClueModalOpen(false)}
@@ -199,40 +191,28 @@ const BlackMarket = () => {
                 CLOSE
               </NeonButton>
 
-              
               {!ownedClues.has(selectedClue.clueId) && (
                 <NeonButton
                   onClick={buyClue}
-                  disabled={verifying || tokens < selectedClue.tokenCost}
+                  disabled={verifying}
                 >
                   {verifying ? "VERIFYING..." : "BUY CLUE"}
                 </NeonButton>
               )}
             </div>
-          </div>
+          </>
         )}
       </Modal>
 
-      
+      {/* CONFIRM MODAL */}
       <Modal
         isOpen={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         title="TRANSACTION CONFIRMED"
-        showClose={false}
+        showClose
       >
-        <div className="text-center space-y-6">
-          <div className="font-mono text-neon-cyan">
-            {verifying ? "Verifying wallet…" : "Clue acquired."}
-          </div>
-
-          <NeonButton
-            onClick={() => {
-              setConfirmOpen(false);
-              setClueModalOpen(true);
-            }}
-          >
-            CONTINUE
-          </NeonButton>
+        <div className="text-center text-neon-cyan">
+          Clue acquired.
         </div>
       </Modal>
     </div>
