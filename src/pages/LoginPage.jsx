@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 import TerminalCard from '../components/TerminalCard';
 import NeonButton from '../components/NeonButton';
 import { useGame } from '../context/GameContext';
@@ -9,6 +10,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { login, setAnaDialogue } = useGame();
   const [formData, setFormData] = useState({ teamId: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processMessage, setProcessMessage] = useState("Verifying Credentials");
 
@@ -69,16 +71,26 @@ const LoginPage = () => {
             
             <div>
               <label className="block text-neon-cyan font-mono text-sm mb-2">PASSWORD</label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                className="w-full bg-black/50 border border-neon-cyan/30 text-white caret-white placeholder:text-gray-500 p-3 font-mono focus:border-neon-cyan focus:outline-none transition-all"
-                spellCheck={false}
-                autoCorrect="off"
-                autoCapitalize="none"
-                placeholder="********"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  className="w-full bg-black/50 border border-neon-cyan/30 text-white caret-white placeholder:text-gray-500 p-3 font-mono focus:border-neon-cyan focus:outline-none transition-all pr-10"
+                  spellCheck={false}
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  placeholder="********"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${showPassword ? 'text-neon-cyan' : 'text-neon-cyan/50 hover:text-neon-cyan/70'}`}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <Eye size={20} className={`${showPassword ? 'drop-shadow-[0_0_6px_rgba(0,255,255,0.6)]' : ''}`} />
+                </button>
+              </div>
             </div>
 
             <NeonButton type="submit" className="w-full">
