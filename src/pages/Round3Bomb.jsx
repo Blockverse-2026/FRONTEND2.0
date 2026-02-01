@@ -4,172 +4,150 @@ import { motion } from "framer-motion";
 import GlitchText from "../components/GlitchText";
 import NeonButton from "../components/NeonButton";
 
-const QUESTIONS = [
-  {
-    q: "What does HTTPS add over HTTP?",
-    options: [
-      "Encryption via TLS",
-      "Faster speed",
-      "Server-side rendering",
-      "Caching only",
-    ],
-    a: 0,
-  },
-  {
-    q: "Which OSI layer does TCP belong to?",
-    options: ["Application", "Transport", "Network", "Data Link"],
-    a: 1,
-  },
-  {
-    q: "Which HTTP status code means Unauthorized?",
-    options: ["401", "403", "404", "500"],
-    a: 0,
-  },
-  {
-    q: "Which JavaScript feature handles async operations?",
-    options: ["Promises", "Hoisting", "Prototypes", "Closures"],
-    a: 0,
-  },
-  {
-    q: "Which protocol secures data in transit?",
-    options: ["TLS", "FTP", "SMTP", "ICMP"],
-    a: 0,
-  },
-];
-
-const TOTAL_TIME = 90; // seconds
+const API = "https://blockverse-backend.onrender.com";
 
 const Round3Bomb = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [qIndex, setQIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
-  const [failed, setFailed] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [data, setData] = useState(null);
+  const [answer, setAnswer] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  // TIMER
-  useEffect(() => {
-    if (failed || success) return;
+  // INIT (POST)
+  const initRound = () => {
+    const token = localStorage.getItem("BLOCKVERSE_TOKEN");
 
-    if (timeLeft <= 0) {
-      setFailed(true);
-      return;
-    }
-
-    const t = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(t);
-  }, [timeLeft, failed, success]);
-
-  const handleAnswer = (i) => {
-    if (i !== QUESTIONS[qIndex].a) {
-      setFailed(true);
-      return;
-    }
-
-    if (qIndex === 4) {
-        localStorage.setItem(`bomb_${id}_diffused`, "true");
-        setSuccess(true);
-    
-
-    } else {
-      setQIndex((q) => q + 1);
-    }
+    fetch(`${API}/api/round3/init`, {
+      method: "POST", 
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        setData(res.data);
+        setLoading(false);
+      })
+      .catch((err) => console.error("Round3 init error:", err));
   };
 
-  return (
-    <div className="flex-1 p-12 flex flex-col items-center gap-10">
+  useEffect(() => {
+    initRound();
+  }, []);
 
-      
-      <div
-        className={`font-mono text-xl tracking-widest ${
-          timeLeft <= 15 ? "text-red-500 animate-pulse" : "text-cyan-400"
-        }`}
-      >
-        ⏱ {Math.floor(timeLeft / 60)}:
-        {(timeLeft % 60).toString().padStart(2, "0")}
+  if (loading || !data) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-cyan-400 font-mono">
+        Initializing core…
       </div>
+    );
+  }
 
-      
-      {failed && (
+  const bomb = data.bombs.find(
+    (b) => String(b.bombNumber) === String(id)
+  );
+
+  if (!bomb) {
+    return <div className="text-red-400">Bomb not found</div>;
+  }
+
+  const current = bomb.questions.find((q) => !q.solved);
+  const diffused = !current;
+
+  const submitAnswer = () => {
+  if (!current || !answer.trim()) return;
+
+  const token = localStorage.getItem("BLOCKVERSE_TOKEN");
+  setSubmitting(true);
+
+  fetch(`${API}/api/round3/submit`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      bombNumber: Number(id),                
+      questionNumber: current.questionNumber,
+      answer: answer.trim().toUpperCase(),  
+    }),
+  })
+    .then((res) => res.json())
+    .then(() => {
+      setAnswer("");
+
+      // 🔁 re-init after submit
+      return fetch("https://blockverse-backend.onrender.com/api/round3/init", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+    })
+    .then((res) => res.json())
+    .then((res) => {
+      setData(res.data);
+      setSubmitting(false);
+    })
+    .catch((err) => {
+      console.error("Submit error:", err);
+      setSubmitting(false);
+    });
+};
+
+
+  return (
+    <div className="flex-1 p-12 flex flex-col items-center gap-10 text-white">
+      <GlitchText
+        text={`BOMB ${id} — CORE DIFFUSION`}
+        className="text-red-500 text-xl"
+      />
+
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+        className="relative w-56 h-56 rounded-full border-4 border-red-500 shadow-[0_0_60px_rgba(255,0,0,0.7)]"
+      >
+        <div className="absolute inset-6 rounded-full border border-red-500/40" />
+        <div className="absolute inset-12 rounded-full bg-red-500/10" />
+      </motion.div>
+
+      {diffused ? (
         <>
-          <GlitchText
-            text="CORE MELTDOWN"
-            className="text-red-600 text-3xl"
-          />
-          <NeonButton variant="danger" onClick={() => navigate("/round3")}>
-            RETURN
+          <div className="text-green-400 text-2xl font-orbitron">
+            ✔ BOMB DIFFUSED
+          </div>
+          <NeonButton onClick={() => navigate("/round3")}>
+            RETURN TO HUB
           </NeonButton>
         </>
-      )}
-
-      {/* SUCCESS */}
-      {success && (
+      ) : (
         <>
-          <GlitchText
-            text={`BOMB ${id} DIFFUSED`}
-            className="text-green-400 text-3xl"
-          />
-          <NeonButton variant="success" onClick={() => navigate("/round3")}>
-            RETURN TO CORE
-          </NeonButton>
-        </>
-      )}
-
-      {/* QUESTION MODE */}
-      {!failed && !success && (
-        <>
-          <GlitchText
-            text={`BOMB ${id} —  ACCESS`}
-            className="text-red-500 text-xl"
-          />
-
-          {/* CORE */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-            className="relative w-56 h-56 rounded-full border-4 border-red-500
-                       shadow-[0_0_60px_rgba(255,0,0,0.7)]"
-          >
-            <div className="absolute inset-6 rounded-full border border-red-500/40" />
-            <div className="absolute inset-12 rounded-full bg-red-500/10" />
-          </motion.div>
-
-          {/* QUESTION */}
-          <div className="max-w-3xl text-center space-y-6">
-            <div className="font-mono text-cyan-400">
-              QUESTION {qIndex + 1} / 5
-            </div>
-
-            <h2 className="text-2xl font-orbitron text-white">
-              {QUESTIONS[qIndex].q}
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              {QUESTIONS[qIndex].options.map((opt, i) => (
-                <motion.button
-                  key={i}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleAnswer(i)}
-                  className="border border-cyan-500/50 p-4 font-mono text-cyan-300
-                             hover:bg-cyan-500/10"
-                >
-                  {opt}
-                </motion.button>
-              ))}
-            </div>
+          <div className="text-center max-w-2xl font-mono text-cyan-300">
+            Q{current.questionNumber} / {bomb.questions.length}
+            <div className="mt-2 text-white">{current.questionText}</div>
           </div>
 
-          {/* STABILITY BAR */}
-          <div className="w-96 h-2 bg-gray-800">
-            <div
-              className="h-2 bg-red-500 transition-all"
-              style={{ width: `${(timeLeft / TOTAL_TIME) * 100}%` }}
-            />
+          <input
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            placeholder="ENTER ANSWER"
+            className="px-4 py-2 bg-black border border-cyan-500 text-cyan-300 font-mono text-center uppercase"
+          />
+
+          <NeonButton
+            onClick={submitAnswer}
+            disabled={submitting || !answer.trim()}
+          >
+            {submitting ? "VERIFYING…" : "SUBMIT"}
+          </NeonButton>
+
+          <div className="text-red-400 font-mono text-sm">
+            Mistakes: {bomb.mistakes}
           </div>
         </>
       )}
