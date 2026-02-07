@@ -1,19 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { motion as Motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { motion as Motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
-import TerminalCard from '../components/TerminalCard';
-import NeonButton from '../components/NeonButton';
-import { useGame } from '../context/GameContext';
+import TerminalCard from "../components/TerminalCard";
+import NeonButton from "../components/NeonButton";
+import { useGame } from "../context/GameContext";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login, setAnaDialogue } = useGame();
 
-  const [formData, setFormData] = useState({ teamId: '', password: '' });
+  const [formData, setFormData] = useState({
+    teamId: "",
+    password: "",
+  });
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processMessage, setProcessMessage] = useState("Verifying Credentials");
+  const [processMessage, setProcessMessage] = useState(
+    "Verifying Credentials"
+  );
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
@@ -22,7 +27,12 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.teamId || !formData.password) return;
+    if (isProcessing) return;
+
+    const teamId = formData.teamId.trim();
+    const password = formData.password.trim();
+
+    if (!teamId || !password) return;
 
     setIsProcessing(true);
     setProcessMessage("Verifying Credentials...");
@@ -33,7 +43,7 @@ const LoginPage = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({ teamId, password }),
         }
       );
 
@@ -49,11 +59,12 @@ const LoginPage = () => {
       setProcessMessage("Accessing Genova Realm...");
 
       setTimeout(() => {
-        login(formData.teamId, accessToken);
-        navigate('/dashboard');
+        login(teamId, accessToken);
+
+        navigate("/panel/login-success", { replace: true });
+
         setIsProcessing(false);
       }, 1200);
-
     } catch (err) {
       setProcessMessage("System Error");
       setTimeout(() => setIsProcessing(false), 2000);
@@ -62,23 +73,24 @@ const LoginPage = () => {
 
   return (
     <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* animated overlay */}
       <Motion.div
-        initial={{ backgroundPosition: '0% 0%', opacity: 0.45 }}
-        animate={{ backgroundPosition: ['0% 0%', '0% 100%', '0% 0%'], opacity: [0.45, 0.6, 0.45] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+        initial={{ backgroundPosition: "0% 0%", opacity: 0.45 }}
+        animate={{
+          backgroundPosition: ["0% 0%", "0% 100%", "0% 0%"],
+          opacity: [0.45, 0.6, 0.45],
+        }}
+        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.7) 100%)',
-          backgroundSize: '100% 200%',
+            "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.7) 100%)",
+          backgroundSize: "100% 200%",
         }}
       />
 
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="w-full max-w-md relative">
-        {/* decorative rings */}
         <div className="absolute -top-24 -left-24 w-64 h-64 rounded-full border border-neon-cyan/30 blur-[0.5px] animate-[spin_20s_linear_infinite] pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] bg-neon-cyan rounded" />
         </div>
@@ -102,6 +114,7 @@ const LoginPage = () => {
                 }
                 className="w-full bg-black/50 border border-neon-cyan/30 text-white p-3 font-mono focus:border-neon-cyan focus:outline-none"
                 placeholder="ENTER TEAM ID"
+                disabled={isProcessing}
               />
             </div>
 
@@ -119,6 +132,7 @@ const LoginPage = () => {
                   }
                   className="w-full bg-black/50 border border-neon-cyan/30 text-white p-3 pr-12 font-mono focus:border-neon-cyan focus:outline-none"
                   placeholder="********"
+                  disabled={isProcessing}
                 />
 
                 <button
@@ -131,15 +145,18 @@ const LoginPage = () => {
               </div>
             </div>
 
-            <NeonButton type="submit" className="w-full">
-              LOGIN TO GENOVA REALM
+            <NeonButton type="submit" className="w-full" disabled={isProcessing}>
+              {isProcessing ? "AUTHENTICATING..." : "LOGIN TO GENOVA REALM"}
             </NeonButton>
           </form>
         </TerminalCard>
 
-        {/* processing overlay */}
         {isProcessing && (
-          <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[9999]">
+          <Motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[9999]"
+          >
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex flex-col items-center">
@@ -148,7 +165,11 @@ const LoginPage = () => {
                     <Motion.div
                       key={i}
                       animate={{ height: [8, 32, 12, 26, 8] }}
-                      transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.06 }}
+                      transition={{
+                        duration: 1.4,
+                        repeat: Infinity,
+                        delay: i * 0.06,
+                      }}
                       className="w-1 bg-white/80"
                     />
                   ))}

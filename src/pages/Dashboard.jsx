@@ -49,7 +49,9 @@ const Dashboard = () => {
   const starsRef = useRef([]);
 
   const isRound2Locked = false;
-  const isRound3Locked = !gameState.completedRounds.includes("round2");
+  // const isRound3Locked = !gameState.completedRounds.includes("round2");
+  const isRound3Locked = false;
+
 
   const isRound1Complete = gameState.completedRounds.includes("round1");
   const isRound2Complete = gameState.completedRounds.includes("round2");
@@ -335,83 +337,78 @@ const Dashboard = () => {
             variants={itemVariants}
             className="md:col-span-1 space-y-4"
           >
-            <Motion.div variants={itemVariants}>
-              <NeonButton
-                className="w-full flex items-center justify-between group"
-                onClick={() => navigate("/round1")}
-              >
-                <div className="flex flex-col items-start">
-                  <span>ROUND 1: FIREWALL</span>
-                  {isRound1Complete && (
-                    <div className="flex items-center gap-1 text-neon-green text-xs mt-1">
-                      <Check size={12} />
-                      <span>COMPLETED</span>
-                    </div>
-                  )}
-                </div>
-                <Shield
-                  className="group-hover:text-white transition-colors"
-                  size={20}
-                />
-              </NeonButton>
-            </Motion.div>
+           <Motion.div variants={itemVariants}>
+  <NeonButton
+    className="w-full flex items-center justify-between group"
+    onClick={() => navigate("/panel/dashboard-intro")}
+  >
+    <div className="flex flex-col items-start">
+      <span>ROUND 1: FIREWALL</span>
+      {isRound1Complete && (
+        <div className="flex items-center gap-1 text-neon-green text-xs mt-1">
+          <Check size={12} />
+          <span>COMPLETED</span>
+        </div>
+      )}
+    </div>
+    <Shield className="group-hover:text-white transition-colors" size={20} />
+  </NeonButton>
+</Motion.div>
 
-            <Motion.div variants={itemVariants}>
-              <NeonButton
-                className={`w-full flex items-center justify-between group ${
-                  isRound2Locked ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                variant="secondary"
-                onClick={() => !isRound2Locked && navigate("/round2/phase1")}
-              >
-                <div className="flex flex-col items-start">
-                  <span>ROUND 2: MARKETPLACE</span>
-                  {isRound2Locked && <Lock size={16} className="mt-1" />}
-                  {isRound2Complete && (
-                    <div className="flex items-center gap-1 text-neon-green text-xs mt-1">
-                      <Check size={12} />
-                      <span>COMPLETED</span>
-                    </div>
-                  )}
-                </div>
-                {!isRound2Locked && (
-                  <ShoppingBag
-                    className="group-hover:text-white transition-colors"
-                    size={20}
-                  />
-                )}
-              </NeonButton>
-            </Motion.div>
+<Motion.div variants={itemVariants}>
+  <NeonButton
+    className={`w-full flex items-center justify-between group ${
+      isRound2Locked ? "opacity-50 cursor-not-allowed" : ""
+    }`}
+    variant="secondary"
+    onClick={() => !isRound2Locked && navigate("/panel/round1-intro")}
+  >
+    <div className="flex flex-col items-start">
+      <span>ROUND 2: MARKETPLACE</span>
+      {isRound2Locked && <Lock size={16} className="mt-1" />}
+      {isRound2Complete && (
+        <div className="flex items-center gap-1 text-neon-green text-xs mt-1">
+          <Check size={12} />
+          <span>COMPLETED</span>
+        </div>
+      )}
+    </div>
+    {!isRound2Locked && (
+      <ShoppingBag
+        className="group-hover:text-white transition-colors"
+        size={20}
+      />
+    )}
+  </NeonButton>
+</Motion.div>
 
-            <Motion.div variants={itemVariants}>
-              <NeonButton
-                className={`w-full flex items-center justify-between group ${
-                  isRound3Locked ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                variant="danger"
-                // onClick={() => !isRound3Locked && navigate("/round3")}
-                onClick={() => navigate("/round3")}
-
-              >
-                <div className="flex flex-col items-start">
-                  <span>ROUND 3: ANOMALY</span>
-                  {isRound3Locked && <Lock size={16} className="mt-1" />}
-                  {isRound3Complete && (
-                    <div className="flex items-center gap-1 text-neon-green text-xs mt-1">
-                      <Check size={12} />
-                      <span>COMPLETED</span>
-                    </div>
-                  )}
-                </div>
-                {!isRound3Locked && (
-                  <Activity
-                    className="group-hover:text-white transition-colors"
-                    size={20}
-                  />
-                )}
-              </NeonButton>
-            </Motion.div>
-          </Motion.div>
+<Motion.div variants={itemVariants}>
+  <NeonButton
+    className={`w-full flex items-center justify-between group ${
+      isRound3Locked ? "opacity-50 cursor-not-allowed" : ""
+    }`}
+    variant="danger"
+    onClick={() => !isRound3Locked && navigate("/panel/round3-intro")}
+  >
+    <div className="flex flex-col items-start">
+      <span>ROUND 3: ANOMALY</span>
+      {isRound3Locked && <Lock size={16} className="mt-1" />}
+      {isRound3Complete && (
+        <div className="flex items-center gap-1 text-neon-green text-xs mt-1">
+          <Check size={12} />
+          <span>COMPLETED</span>
+        </div>
+      )}
+    </div>
+    {!isRound3Locked && (
+      <Activity
+        className="group-hover:text-white transition-colors"
+        size={20}
+      />
+    )}
+  </NeonButton>
+</Motion.div>
+  </Motion.div>
 
           <Motion.div variants={itemVariants} className="md:col-span-1">
             <Motion.div whileHover={{ scale: 1.01 }}>

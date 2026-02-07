@@ -27,7 +27,7 @@ const Round1 = () => {
   const [error, setError] = useState(null);
 
 
-  const [answerStatus, setAnswerStatus] = useState(null); // "correct" | "incorrect"
+  const [answerStatus, setAnswerStatus] = useState(null); 
 
   useEffect(() => {
     const savedNodes = localStorage.getItem("round1_nodes");
@@ -153,8 +153,6 @@ const Round1 = () => {
         }, 800);
         return;
       }
-
-      // ✅ CORRECT
       if (json.data?.correct === true || json.data?.points > 0) {
         setAnswerStatus("correct");
 
@@ -247,7 +245,7 @@ const Round1 = () => {
 
             <NeonButton
               className="mt-4 w-full"
-              onClick={() => navigate("/round2/phase1")}
+              onClick={() => navigate("/panel/round1-intro")}
             >
               PROCEED TO ROUND 2 →
             </NeonButton>
@@ -255,7 +253,6 @@ const Round1 = () => {
         </TerminalCard>
       </div>
 
-      {/* QUESTION MODAL */}
       <Modal
         isOpen={!!selectedNode}
         onClose={closeModal}
