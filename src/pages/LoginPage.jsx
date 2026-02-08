@@ -61,7 +61,7 @@ const LoginPage = () => {
       setTimeout(() => {
         login(teamId, accessToken);
 
-        navigate("/panel/login-success", { replace: true });
+        navigate("/dashboard", { replace: true });
 
         setIsProcessing(false);
       }, 1200);

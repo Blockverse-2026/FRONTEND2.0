@@ -340,7 +340,7 @@ const Dashboard = () => {
            <Motion.div variants={itemVariants}>
   <NeonButton
     className="w-full flex items-center justify-between group"
-    onClick={() => navigate("/panel/dashboard-intro")}
+    onClick={() => navigate("/panel/round1-intro")}
   >
     <div className="flex flex-col items-start">
       <span>ROUND 1: FIREWALL</span>
@@ -361,7 +361,7 @@ const Dashboard = () => {
       isRound2Locked ? "opacity-50 cursor-not-allowed" : ""
     }`}
     variant="secondary"
-    onClick={() => !isRound2Locked && navigate("/panel/round1-intro")}
+    onClick={() => !isRound2Locked && navigate("/panel/round2-intro")}
   >
     <div className="flex flex-col items-start">
       <span>ROUND 2: MARKETPLACE</span>

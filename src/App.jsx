@@ -22,7 +22,7 @@ import Round3 from "./pages/Round3";
 import Round3Bomb from "./pages/Round3Bomb";
 
 import PanelPlayer from "./components/PanelPlayer";
-import { panelsData } from "./utils/panelsData";
+import { PANELS_DATA } from "./utils/panelsData";
 import { PANELS } from "./utils/panelKeys";
 import { markPanelSeen } from "./utils/panelProgress";
 
@@ -31,7 +31,7 @@ const PanelRoute = ({ panelKey, next }) => {
 
   return (
     <PanelPlayer
-      panels={panelsData[panelKey] || []}
+      panels={PANELS_DATA[panelKey]}
       onComplete={() => {
         markPanelSeen(panelKey);
         navigate(next, { replace: true });
@@ -61,37 +61,21 @@ function App() {
 
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/dashboard" element={<Dashboard />} />
 
-              <Route
-                path="/panel/login-success"
-                element={
-                  <PanelRoute
-                    panelKey={PANELS.LOGIN_SUCCESS}
-                    next="/dashboard"
-                  />
-                }
-              />
-
-              <Route
-                path="/panel/dashboard-intro"
-                element={
-                  <PanelRoute
-                    panelKey={PANELS.DASHBOARD_INTRO}
-                    next="/round1"
-                  />
-                }
-              />
-
+              {/* ROUND 1 */}
               <Route
                 path="/panel/round1-intro"
                 element={
                   <PanelRoute
                     panelKey={PANELS.ROUND1_INTRO}
-                    next="/panel/round2-intro"
+                    next="/round1"
                   />
                 }
               />
+              <Route path="/round1" element={<Round1 />} />
 
+              {/* ROUND 2 */}
               <Route
                 path="/panel/round2-intro"
                 element={
@@ -101,16 +85,10 @@ function App() {
                   />
                 }
               />
+              <Route path="/round2/phase1" element={<Round2 />} />
+              <Route path="/round2/phase2" element={<BlackMarket />} />
 
-              <Route
-                path="/panel/round2-outro"
-                element={
-                  <PanelRoute
-                    panelKey={PANELS.ROUND2_OUTRO}
-                    next="/panel/round3-intro"
-                  />
-                }
-              />
+              {/* ROUND 3 */}
               <Route
                 path="/panel/round3-intro"
                 element={
@@ -120,7 +98,10 @@ function App() {
                   />
                 }
               />
+              <Route path="/round3" element={<Round3 />} />
+              <Route path="/round3/bomb/:id" element={<Round3Bomb />} />
 
+              {/* FINAL */}
               <Route
                 path="/panel/final"
                 element={
@@ -130,13 +111,6 @@ function App() {
                   />
                 }
               />
-
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/round1" element={<Round1 />} />
-              <Route path="/round2/phase1" element={<Round2 />} />
-              <Route path="/round2/phase2" element={<BlackMarket />} />
-              <Route path="/round3" element={<Round3 />} />
-              <Route path="/round3/bomb/:id" element={<Round3Bomb />} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

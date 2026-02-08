@@ -245,7 +245,7 @@ const Round1 = () => {
 
             <NeonButton
               className="mt-4 w-full"
-              onClick={() => navigate("/panel/round1-intro")}
+              onClick={() => navigate("/panel/round2-intro")}
             >
               PROCEED TO ROUND 2 →
             </NeonButton>

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const LOCK_TIME = 5000;   
-const AUTO_TIME = 15000; 
+const LOCK_TIME = 5000;    
+const AUTO_TIME = 15000;   
 
 const PanelPlayer = ({ panels = [], onComplete }) => {
   const [index, setIndex] = useState(0);
@@ -11,11 +11,22 @@ const PanelPlayer = ({ panels = [], onComplete }) => {
   const lockRef = useRef(null);
   const autoRef = useRef(null);
 
-  const next = () => {
-    clearTimeout(autoRef.current);
+  const clearTimers = () => {
     clearTimeout(lockRef.current);
+    clearTimeout(autoRef.current);
+  };
+
+  const next = () => {
+    clearTimers();
     setCanSkip(false);
-    setIndex((i) => i + 1);
+
+    setIndex((prev) => {
+      if (prev + 1 >= panels.length) {
+        onComplete?.();    
+        return prev;        
+      }
+      return prev + 1;
+    });
   };
 
   useEffect(() => {
@@ -29,21 +40,15 @@ const PanelPlayer = ({ panels = [], onComplete }) => {
       next();
     }, AUTO_TIME);
 
-    return () => {
-      clearTimeout(lockRef.current);
-      clearTimeout(autoRef.current);
-    };
+    return clearTimers;
   }, [index]);
-
-  useEffect(() => {
-    if (index === panels.length) onComplete?.();
-  }, [index, panels.length, onComplete]);
 
   useEffect(() => {
     const handler = (e) => {
       if (!canSkip) return;
       if (e.key === " " || e.key === "Enter") next();
     };
+
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [canSkip]);

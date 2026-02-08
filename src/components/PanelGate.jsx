@@ -1,6 +1,6 @@
 import PanelPlayer from "./PanelPlayer";
 import { hasSeenPanel, markPanelSeen } from "../utils/panelProgress";
-import { panelsData } from "../utils/panelsData";
+import { PANELS_DATA } from "../utils/panelsData";
 
 const PanelGate = ({ panelKey, children }) => {
   if (hasSeenPanel(panelKey)) {
@@ -9,10 +9,9 @@ const PanelGate = ({ panelKey, children }) => {
 
   return (
     <PanelPlayer
-      panels={panelsData[panelKey]}
+      panels={PANELS_DATA[panelKey]}
       onComplete={() => {
         markPanelSeen(panelKey);
-        window.location.reload();
       }}
     />
   );
