@@ -1,50 +1,76 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AlertOctagon, Lock } from 'lucide-react';
-import TerminalCard from '../components/TerminalCard';
-import NeonButton from '../components/NeonButton';
-import GlitchText from '../components/GlitchText';
-import { useGame } from '../context/GameContext';
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import GlitchText from "../components/GlitchText";
+
+const API = "https://blockverse-backend.onrender.com";
 
 const Round3 = () => {
   const navigate = useNavigate();
-  const { setAnaDialogue } = useGame();
+  const [data, setData] = useState(null);
 
   useEffect(() => {
-    setAnaDialogue("WARNING: ANOMALY CORE REACHED. EXTREME CAUTION ADVISED.");
-  }, [setAnaDialogue]);
+    const token = localStorage.getItem("BLOCKVERSE_TOKEN");
 
-  const anomalies = ['A', 'B', 'C'];
+    fetch(`${API}/api/round3/init`, {
+      method: "POST", // ✅ POST
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((res) => setData(res.data))
+      .catch((err) => console.error("Round3 hub init error:", err));
+  }, []);
+
+  if (!data) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-cyan-400 font-mono">
+        Initializing bombs…
+      </div>
+    );
+  }
 
   return (
-    <div className="flex-1 p-6 md:p-12 space-y-8">
-      <div className="flex justify-between items-center">
-        <GlitchText text="ANOMALY CORE" className="text-red-500" />
-        <NeonButton variant="danger" onClick={() => navigate('/dashboard')}>
-            EMERGENCY EXIT
-        </NeonButton>
-      </div>
+    <div className="flex-1 p-12 flex flex-col items-center gap-16">
+      <GlitchText text="BOMB DIFFUSION" className="text-red-500 text-2xl" />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-        {anomalies.map((id) => (
-          <div key={id} className="relative group cursor-not-allowed">
-            <TerminalCard 
-              title={`ANOMALY ${id}`} 
-              headerColor="gold" 
-              className="h-80 border-red-500/50 bg-red-900/10 flex flex-col items-center justify-center gap-6 group-hover:border-red-500 transition-colors"
+      <div className="flex gap-24">
+        {data.bombs.map((bomb) => {
+          const diffused = bomb.questions.every((q) => q.solved);
+
+          return (
+            <motion.div
+              key={bomb.bombNumber}
+              whileHover={!diffused ? { scale: 1.05 } : {}}
+              onClick={() =>
+                !diffused && navigate(`/round3/bomb/${bomb.bombNumber}`)
+              }
+              className={`relative w-48 h-48 rounded-full border-4
+                ${
+                  diffused
+                    ? "border-green-500 opacity-60 cursor-not-allowed"
+                    : "border-red-500 cursor-pointer shadow-[0_0_40px_rgba(255,0,0,0.6)]"
+                }`}
             >
-              <AlertOctagon size={48} className="text-red-500 animate-pulse" />
-              <div className="flex flex-col items-center gap-2">
-                <Lock size={20} className="text-gray-400" />
-                <span className="font-mono text-red-400 text-sm text-center">
-                    LOCKED UNTIL FRAGMENTS ACQUIRED
+              <div className="absolute inset-4 rounded-full border border-current animate-pulse" />
+              <div className="absolute inset-8 rounded-full bg-current/10" />
+
+              <div className="absolute inset-0 flex flex-col items-center justify-center font-orbitron">
+                <span className="text-xl text-red-400">
+                  BOMB {bomb.bombNumber}
                 </span>
+
+                {diffused ? (
+                  <span className="mt-2 text-green-400 text-sm">✔ DIFFUSED</span>
+                ) : (
+                  <span className="mt-2 text-xs text-gray-400">READY</span>
+                )}
               </div>
-          </TerminalCard>
-          
-            <div className="absolute inset-0 bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none mix-blend-overlay" />
-          </div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );

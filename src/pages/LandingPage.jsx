@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion as Motion } from 'framer-motion';
-import GlitchText from '../components/GlitchText';
-import NeonButton from '../components/NeonButton';
-import CyberBackground from '../components/CyberBackground';
-import { useGame } from '../context/GameContext';
-import { glitchAudio } from '../utils/glitchAudio';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion as Motion } from "framer-motion";
+import GlitchText from "../components/GlitchText";
+import NeonButton from "../components/NeonButton";
+import CyberBackground from "../components/CyberBackground";
+import { useGame } from "../context/GameContext";
+import { glitchAudio } from "../utils/glitchAudio";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -15,55 +15,60 @@ const LandingPage = () => {
   useEffect(() => {
     setAnaDialogue("Connection detected. Identify yourself to proceed.");
     const initAudio = () => glitchAudio.init();
-    window.addEventListener('click', initAudio, { once: true });
+    window.addEventListener("click", initAudio, { once: true });
     const interval = setInterval(() => {
       if (Math.random() > 0.7) {
-        setGlitchTrigger(prev => prev + 1);
+        setGlitchTrigger((prev) => prev + 1);
         if (Math.random() > 0.5) glitchAudio.playGlitch();
       }
     }, 2000);
 
     return () => {
-      window.removeEventListener('click', initAudio);
+      window.removeEventListener("click", initAudio);
       clearInterval(interval);
     };
   }, [setAnaDialogue]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         staggerChildren: 0.3,
-        delayChildren: 0.5 
-      }
-    }
+        delayChildren: 0.5,
+      },
+    },
   };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0, scale: 0.9 },
-    visible: { 
-      y: 0, 
-      opacity: 1, 
+    visible: {
+      y: 0,
+      opacity: 1,
       scale: 1,
-      transition: { type: "spring", stiffness: 100 }
-    }
+      transition: { type: "spring", stiffness: 100 },
+    },
   };
 
   const heroGlitchVariants = {
-    normal: { x: 0, filter: 'hue-rotate(0deg)' },
+    normal: { x: 0, filter: "hue-rotate(0deg)" },
     glitch: {
       x: [-5, 5, -5, 0],
-      filter: ['hue-rotate(0deg)', 'hue-rotate(90deg)', 'hue-rotate(-90deg)', 'hue-rotate(0deg)'],
-      transition: { duration: 0.2 }
-    }
+      filter: [
+        "hue-rotate(0deg)",
+        "hue-rotate(90deg)",
+        "hue-rotate(-90deg)",
+        "hue-rotate(0deg)",
+      ],
+      transition: { duration: 0.2 },
+    },
   };
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden min-h-screen">
       <CyberBackground />
 
-      <Motion.div 
+      <Motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -81,31 +86,34 @@ const LandingPage = () => {
             </div>
           </Motion.div>
         </Motion.div>
-        
+
         <Motion.div variants={itemVariants} className="space-y-4 relative">
           <h2 className="text-2xl md:text-3xl font-orbitron text-neon-gold tracking-[0.2em] uppercase drop-shadow-[0_0_10px_rgba(255,0,255,0.5)]">
             ENTER GENOVA REALM
           </h2>
-          
-          
         </Motion.div>
 
         <Motion.div variants={itemVariants} className="pt-8">
-          <NeonButton 
+          <NeonButton
             onClick={() => {
-                glitchAudio.playGlitch();
-                navigate('/login');
+              glitchAudio.playGlitch();
+              navigate("/login");
             }}
             className="text-lg px-12 py-4"
             onMouseEnter={() => glitchAudio.playNoiseBurst(0)}
           >
             INITIALIZE CONNECTION &gt;&gt;
           </NeonButton>
-          
-          <Motion.p 
+
+          <Motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
-            transition={{ delay: 2, duration: 1, repeat: Infinity, repeatType: "reverse" }}
+            transition={{
+              delay: 2,
+              duration: 1,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
             className="mt-4 text-[10px] text-neon-green font-mono uppercase tracking-widest"
           >
             v2.0.4 // SYSTEM READY
