@@ -13,7 +13,7 @@ const Round3 = () => {
     const token = localStorage.getItem("BLOCKVERSE_TOKEN");
 
     fetch(`${API}/api/round3/init`, {
-      method: "POST", // ✅ POST
+      method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
