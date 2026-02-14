@@ -53,3 +53,37 @@ body {
   z-index: 9999;
   opacity: 0.3;
 }
+
+@keyframes glitch-shift {
+  0%, 100% { transform: none; }
+  10% { transform: translate(1px, -1px); }
+  20% { transform: translate(-2px, 1px); }
+  30% { transform: skewX(4deg); }
+  40% { transform: none; }
+  50% { transform: translate(1px, 1px); }
+  60% { transform: none; }
+  70% { transform: translate(-1px, -1px); }
+  80% { transform: skewY(2deg); }
+  90% { transform: none; }
+}
+.animate-glitch {
+  animation: glitch-shift 1.8s steps(2, end) infinite;
+  will-change: transform;
+}
+
+@keyframes neon-sweep {
+  0% { transform: translateX(-20%); opacity: 0; }
+  10% { opacity: 0.8; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+.animate-neon-sweep {
+  animation: neon-sweep 2.8s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(0,246,255,.2); }
+  50% { box-shadow: 0 0 18px rgba(0,246,255,.35); }
+}
+.glow-pulse {
+  animation: glow-pulse 2.4s ease-in-out infinite;
+}
