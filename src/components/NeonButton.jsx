@@ -3,7 +3,7 @@ import { motion as Motion } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
 
 const NeonButton = ({ children, onClick, variant = 'primary', className, ...props }) => {
-  const baseStyles = "relative px-6 py-3 font-orbitron font-bold uppercase tracking-wider transition-all duration-200 border-2 overflow-hidden group";
+  const baseStyles = "relative px-6 py-3 font-orbitron font-bold uppercase tracking-wider transition-all duration-200 border-2 overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variants = {
     primary: "border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10 hover:shadow-neon",
@@ -14,7 +14,7 @@ const NeonButton = ({ children, onClick, variant = 'primary', className, ...prop
   return (
     <Motion.button
       whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.97, y: 1 }}
       className={twMerge(baseStyles, variants[variant], className)}
       onClick={onClick}
       {...props}
