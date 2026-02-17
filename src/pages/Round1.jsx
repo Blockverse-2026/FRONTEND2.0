@@ -20,7 +20,7 @@ const Round1 = () => {
     Array.from({ length: TOTAL_NODES }, (_, i) => ({
       id: i,
       status: "locked",
-    }))
+    })),
   );
 
   const [score, setScore] = useState(0);
@@ -30,7 +30,7 @@ const Round1 = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const [answerStatus, setAnswerStatus] = useState(null); 
+  const [answerStatus, setAnswerStatus] = useState(null);
   const [shakeId, setShakeId] = useState(null);
   const [rippleId, setRippleId] = useState(null);
   const [displayedScore, setDisplayedScore] = useState(0);
@@ -62,7 +62,7 @@ const Round1 = () => {
             Array.from({ length: TOTAL_NODES }, (_, i) => ({
               id: i,
               status: "locked",
-            }))
+            })),
           );
           setScore(0);
         }
@@ -102,29 +102,30 @@ const Round1 = () => {
   }, []);
 
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const initRound = async () => {
       try {
         const token = localStorage.getItem("BLOCKVERSE_TOKEN");
-        if (!token) throw new Error("No token found");
 
         const res = await fetch(
-          "https://blockverse-backend.onrender.com/api/round1/questions",
+          "https://blockverse-backend.onrender.com/api/round1/init",
           {
+            method: "POST",
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
         const json = await res.json();
-        if (!res.ok || !json?.data?.questions)
-          throw new Error("Failed to load questions");
+
+        if (!res.ok) throw new Error("Failed to init round");
 
         setQuestions(json.data.questions);
+        setTimeLeft(Math.floor(json.data.timeRemainingMs / 1000));
       } catch (err) {
         setError(err.message);
       }
     };
 
-    fetchQuestions();
+    initRound();
   }, []);
 
   useEffect(() => {
@@ -166,7 +167,9 @@ const Round1 = () => {
           setQuestionOrder(parsed);
           return;
         }
-      } catch (e) { void e; }
+      } catch (e) {
+        void e;
+      }
     }
     const seed = seedFromString(teamKey);
     const order = makeOrder(questions.length, rng(seed));
@@ -211,7 +214,7 @@ const Round1 = () => {
 
     const payload = {
       questionId: activeQuestion.questionId,
-      selectedOption: activeQuestion.options[selectedIndex],
+      answer: activeQuestion.options[selectedIndex],
     };
 
     try {
@@ -224,24 +227,31 @@ const Round1 = () => {
             Authorization: `Bearer ${localStorage.getItem("BLOCKVERSE_TOKEN")}`,
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       const json = await res.json();
 
-      
-      if (json.data?.correct === false) {
+      // ✅ WRONG ANSWER HANDLING
+      if (!res.ok) {
         setAnswerStatus("incorrect");
         setShakeId(selectedNode.id);
+
+        // reset streak
+        setStreak(0);
+        setComboMultiplier(1);
 
         setTimeout(() => {
           setShakeId(null);
           blockNode(selectedNode.id);
           closeModal();
         }, 800);
+
         return;
       }
-      if (json.data?.correct === true || json.data?.points > 0) {
+
+      // ✅ CORRECT ANSWER HANDLING
+      if (json.data?.correct === true) {
         setAnswerStatus("correct");
         setRippleId(selectedNode.id);
 
@@ -251,9 +261,9 @@ const Round1 = () => {
           return copy;
         });
 
-        if (json.data?.points) {
-          setScore((prev) => prev + json.data.points);
-          setXp((prev) => prev + json.data.points);
+        if (json.data?.pointsAwarded) {
+          setScore((prev) => prev + json.data.pointsAwarded);
+          setXp((prev) => prev + json.data.pointsAwarded);
           setStreak((s) => s + 1);
           setComboMultiplier((m) => Math.min(m + 0.1, 3));
         }
@@ -306,13 +316,14 @@ const Round1 = () => {
     >
       <CyberBackground />
       <div className="scanline-overlay" />
-      
 
       {/* TOP NAV */}
       <div className="relative flex items-center justify-between px-6 py-4 border border-neon-cyan/70 bg-gradient-to-b from-black/60 to-black/30 backdrop-blur-md shadow-[0_0_12px_rgba(0,246,255,.15)] glow-pulse">
         <div className="flex items-center gap-3">
           <Zap size={18} className="text-neon-cyan" />
-          <span className="font-orbitron tracking-[0.35em] text-neon-cyan">BLOCKVERSE</span>
+          <span className="font-orbitron tracking-[0.35em] text-neon-cyan">
+            BLOCKVERSE
+          </span>
           <div className="hidden md:flex items-center gap-3 text-neon-cyan/80 ml-6">
             <span className="h-3 w-[1px] bg-neon-cyan/40" />
             <span>Round 1</span>
@@ -322,115 +333,139 @@ const Round1 = () => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <User size={16} className="text-neon-gold" />
-            <span className="text-neon-gold">Team {gameState.teamId ?? "N/A"}</span>
+            <span className="text-neon-gold">
+              Team {gameState.teamName ?? "N/A"}
+            </span>
           </div>
         </div>
       </div>
 
       <div className="flex-1 grid grid-cols-[1fr_auto] gap-8 items-start">
-      {/* GRID */}
-      <div className="flex-1 max-h-[80vh] overflow-y-auto">
-        <div className="mx-auto grid grid-cols-5 sm:grid-cols-4 xs:grid-cols-3 gap-5">
-          {nodes.map((node) => (
-            <Motion.button
-              key={node.id}
-              whileHover={node.status === "blocked" ? {} : { scale: 1.05 }}
-              whileTap={node.status === "blocked" ? {} : { scale: 0.95 }}
-              onClick={() => handleNodeClick(node)}
-              animate={node.id === shakeId ? { x: [0, -6, 6, -4, 4, 0] } : {}}
-              transition={{ duration: 0.3 }}
-              className={`group aspect-square border-2 flex items-center justify-center transition-all relative rounded-md overflow-visible
+        {/* GRID */}
+        <div className="flex-1 max-h-[80vh] overflow-y-auto">
+          <div className="mx-auto grid grid-cols-5 sm:grid-cols-4 xs:grid-cols-3 gap-5">
+            {nodes.map((node) => (
+              <Motion.button
+                key={node.id}
+                whileHover={node.status === "blocked" ? {} : { scale: 1.05 }}
+                whileTap={node.status === "blocked" ? {} : { scale: 0.95 }}
+                onClick={() => handleNodeClick(node)}
+                animate={node.id === shakeId ? { x: [0, -6, 6, -4, 4, 0] } : {}}
+                transition={{ duration: 0.3 }}
+                className={`group aspect-square border-2 flex items-center justify-center transition-all relative rounded-md overflow-visible
                 ${
                   node.status === "unlocked"
                     ? "border-neon-green bg-black/40 backdrop-blur-sm text-neon-green ring-1 ring-neon-green/30"
                     : node.status === "blocked"
-                    ? "border-red-700 border-dashed bg-red-900/20 backdrop-blur-sm text-red-400 cursor-not-allowed"
-                    : "border-red-500 bg-black/40 backdrop-blur-sm text-red-500"
+                      ? "border-red-700 border-dashed bg-red-900/20 backdrop-blur-sm text-red-400 cursor-not-allowed"
+                      : "border-red-500 bg-black/40 backdrop-blur-sm text-red-500"
                 }`}
-            >
-              {/* label kept inside tile to avoid clipping */}
-              <span className="absolute top-1 left-1 text-[10px] px-1 py-[2px] border border-current bg-black/60">
-                NODE {String(node.id + 1).padStart(2, "0")}
-              </span>
+              >
+                {/* label kept inside tile to avoid clipping */}
+                <span className="absolute top-1 left-1 text-[10px] px-1 py-[2px] border border-current bg-black/60">
+                  NODE {String(node.id + 1).padStart(2, "0")}
+                </span>
 
-              {node.status === "unlocked" ? (
-                <Unlock size={28} />
-              ) : node.status === "blocked" ? (
-                <Ban size={28} />
-              ) : (
-                <Lock size={28} />
-              )}
-              {node.status === "blocked" && (
-                <span className="absolute inset-0 pointer-events-none rounded-md bg-[repeating-linear-gradient(45deg,rgba(255,0,0,0.06)_0px,rgba(255,0,0,0.06)_8px,transparent_8px,transparent_16px)]" />
-              )}
-              {/* hover label */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] opacity-0 group-hover:opacity-100 transition">
-                {node.status === "locked" ? "Locked Node" : node.status === "blocked" ? "Firewall Detected" : "Access Granted"}
-              </div>
-              {/* unlocked progress ring */}
-              
-              {/* success ripple */}
-              {rippleId === node.id && (
-                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-neon-green animate-ping pointer-events-none" />
-              )}
-            </Motion.button>
-          ))}
-        </div>
-      </div>
+                {node.status === "unlocked" ? (
+                  <Unlock size={28} />
+                ) : node.status === "blocked" ? (
+                  <Ban size={28} />
+                ) : (
+                  <Lock size={28} />
+                )}
+                {node.status === "blocked" && (
+                  <span className="absolute inset-0 pointer-events-none rounded-md bg-[repeating-linear-gradient(45deg,rgba(255,0,0,0.06)_0px,rgba(255,0,0,0.06)_8px,transparent_8px,transparent_16px)]" />
+                )}
+                {/* hover label */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] opacity-0 group-hover:opacity-100 transition">
+                  {node.status === "locked"
+                    ? "Locked Node"
+                    : node.status === "blocked"
+                      ? "Firewall Detected"
+                      : "Access Granted"}
+                </div>
+                {/* unlocked progress ring */}
 
-      {/* SIDE PANEL */}
-      <div className="w-80">
-        <TerminalCard title="ROUND 1 STATUS" headerColor="gold" className="backdrop-blur-md bg-black/40 border-neon-cyan/60">
-          <div className="space-y-4 font-mono text-sm">
-            <div className="text-neon-cyan flex items-center gap-2">
-              <span>MISSION:</span>
-              <GlitchText text="FIREWALL GRID" as="span" size="small" />
-            </div>
-
-            <p>
-              UNLOCKED:{" "}
-              <span className="text-neon-green">
-                {unlockedCount}/{TOTAL_NODES}
-              </span>
-            </p>
-            <div className="h-2 bg-black/40 border border-neon-cyan/40">
-              <div className="h-full bg-neon-green" style={{ width: unlockedPct + '%' }} />
-            </div>
-
-            <div className="flex items-center gap-2 text-neon-cyan">
-              <Clock size={14} />
-              <span>TIME LIMITED ROUND • {minutes}:{seconds}</span>
-            </div>
-            <div className="h-2 bg-black/40 border border-neon-cyan/40">
-              <div className="h-full bg-neon-cyan" style={{ width: ((timeLeft / 300) * 100) + '%' }} />
-            </div>
-
-            <p className="text-neon-green text-xl">SCORE: {Math.round(displayedScore)}</p>
-
-            <div className="flex items-center justify-between">
-              <span className="text-neon-gold">XP</span>
-              <span className="text-neon-gold">Lvl {level}</span>
-            </div>
-            <div className="h-2 bg-black/40 border border-neon-gold/40">
-              <div className="h-full bg-neon-gold" style={{ width: xpPct + '%' }} />
-            </div>
-
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-neon-green">Streak: {streak}</span>
-              <span className="text-neon-cyan">Combo x{comboMultiplier.toFixed(1)}</span>
-            </div>
-
-            <NeonButton
-              className="mt-4 w-full"
-              onClick={() => navigate("/panel/round2-intro")}
-              disabled={unlockedCount < 5 || timeLeft === 0}
-            >
-              PROCEED TO ROUND 2 →
-            </NeonButton>
+                {/* success ripple */}
+                {rippleId === node.id && (
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-neon-green animate-ping pointer-events-none" />
+                )}
+              </Motion.button>
+            ))}
           </div>
-        </TerminalCard>
-      </div>
+        </div>
 
+        {/* SIDE PANEL */}
+        <div className="w-80">
+          <TerminalCard
+            title="ROUND 1 STATUS"
+            headerColor="gold"
+            className="backdrop-blur-md bg-black/40 border-neon-cyan/60"
+          >
+            <div className="space-y-4 font-mono text-sm">
+              <div className="text-neon-cyan flex items-center gap-2">
+                <span>MISSION:</span>
+                <GlitchText text="FIREWALL GRID" as="span" size="small" />
+              </div>
+
+              <p>
+                UNLOCKED:{" "}
+                <span className="text-neon-green">
+                  {unlockedCount}/{TOTAL_NODES}
+                </span>
+              </p>
+              <div className="h-2 bg-black/40 border border-neon-cyan/40">
+                <div
+                  className="h-full bg-neon-green"
+                  style={{ width: unlockedPct + "%" }}
+                />
+              </div>
+
+              <div className="flex items-center gap-2 text-neon-cyan">
+                <Clock size={14} />
+                <span>
+                  TIME LIMITED ROUND • {minutes}:{seconds}
+                </span>
+              </div>
+              <div className="h-2 bg-black/40 border border-neon-cyan/40">
+                <div
+                  className="h-full bg-neon-cyan"
+                  style={{ width: (timeLeft / 300) * 100 + "%" }}
+                />
+              </div>
+
+              <p className="text-neon-green text-xl">
+                SCORE: {Math.round(displayedScore)}
+              </p>
+
+              <div className="flex items-center justify-between">
+                <span className="text-neon-gold">XP</span>
+                <span className="text-neon-gold">Lvl {level}</span>
+              </div>
+              <div className="h-2 bg-black/40 border border-neon-gold/40">
+                <div
+                  className="h-full bg-neon-gold"
+                  style={{ width: xpPct + "%" }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-neon-green">Streak: {streak}</span>
+                <span className="text-neon-cyan">
+                  Combo x{comboMultiplier.toFixed(1)}
+                </span>
+              </div>
+
+              <NeonButton
+                className="mt-4 w-full"
+                onClick={() => navigate("/panel/round2-intro")}
+                disabled={unlockedCount < 5 || timeLeft === 0}
+              >
+                PROCEED TO ROUND 2 →
+              </NeonButton>
+            </div>
+          </TerminalCard>
+        </div>
       </div>
 
       <Modal
@@ -441,7 +476,7 @@ const Round1 = () => {
         {activeQuestion && (
           <>
             <p className="text-neon-cyan font-mono mb-4">
-              {activeQuestion.question}
+              {activeQuestion.questionText}
             </p>
 
             <div className="space-y-2">
@@ -461,7 +496,6 @@ const Round1 = () => {
               ))}
             </div>
 
-            
             {answerStatus && (
               <div
                 className={`mt-4 text-center font-mono text-sm ${

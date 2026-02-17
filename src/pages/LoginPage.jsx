@@ -16,9 +16,7 @@ const LoginPage = () => {
     password: "",
   });
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processMessage, setProcessMessage] = useState(
-    "Verifying Credentials"
-  );
+  const [processMessage, setProcessMessage] = useState("Verifying Credentials");
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
@@ -44,7 +42,7 @@ const LoginPage = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ teamId, password }),
-        }
+        },
       );
 
       const data = await res.json();
@@ -56,10 +54,12 @@ const LoginPage = () => {
       }
 
       const accessToken = data.data.accessToken;
+      const teamDbId = data.data.team._id;
+      const teamName = data.data.team.teamId;
       setProcessMessage("Accessing Genova Realm...");
 
       setTimeout(() => {
-        login(teamId, accessToken);
+        login(teamDbId, teamName, accessToken);
 
         navigate("/dashboard", { replace: true });
 
@@ -145,7 +145,11 @@ const LoginPage = () => {
               </div>
             </div>
 
-            <NeonButton type="submit" className="w-full" disabled={isProcessing}>
+            <NeonButton
+              type="submit"
+              className="w-full"
+              disabled={isProcessing}
+            >
               {isProcessing ? "AUTHENTICATING..." : "LOGIN TO GENOVA REALM"}
             </NeonButton>
           </form>

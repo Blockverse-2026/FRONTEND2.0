@@ -13,12 +13,13 @@ export const useGame = () => useContext(GameContext);
 export const GameProvider = ({ children }) => {
   /* ================= TOKEN ================= */
   const [token, setToken] = useState(() =>
-    localStorage.getItem("BLOCKVERSE_TOKEN")
+    localStorage.getItem("BLOCKVERSE_TOKEN"),
   );
 
   /* ================= GAME STATE ================= */
   const [gameState, setGameState] = useState({
-    teamId: null,
+    teamDbId: null,
+    teamName: null,
     points: 0,
     tokens: 0,
     fragments: [],
@@ -29,21 +30,22 @@ export const GameProvider = ({ children }) => {
 
   /* ================= ANA ================= */
   const [anaDialogue, setAnaDialogue] = useState(
-    "System initialized. Waiting for input..."
+    "System initialized. Waiting for input...",
   );
   const [anaVisible, setAnaVisible] = useState(false);
 
   /* ================= AUTH ================= */
-  const login = (teamId, accessToken) => {
+  const login = (teamDbId, teamName, accessToken) => {
     localStorage.setItem("BLOCKVERSE_TOKEN", accessToken);
     setToken(accessToken);
 
-    setGameState(prev => ({
+    setGameState((prev) => ({
       ...prev,
-      teamId,
+      teamDbId,
+      teamName,
     }));
 
-    setAnaDialogue(`Welcome back, Team ${teamId}. Access granted.`);
+    setAnaDialogue(`Welcome back, Team ${teamName}. Access granted.`);
   };
 
   const logout = () => {
@@ -52,6 +54,7 @@ export const GameProvider = ({ children }) => {
 
     setGameState({
       teamId: null,
+      teamName: null,
       points: 0,
       tokens: 0,
       fragments: [],
@@ -63,14 +66,14 @@ export const GameProvider = ({ children }) => {
 
   /* ================= SCORING ================= */
   const addPoints = (amount) => {
-    setGameState(prev => ({
+    setGameState((prev) => ({
       ...prev,
       points: prev.points + Number(amount),
     }));
   };
 
   const addTokens = (amount) => {
-    setGameState(prev => ({
+    setGameState((prev) => ({
       ...prev,
       tokens: prev.tokens + Number(amount),
     }));
@@ -78,7 +81,7 @@ export const GameProvider = ({ children }) => {
 
   /* ================= PROGRESSION ================= */
   const unlockFragment = (fragmentId) => {
-    setGameState(prev => {
+    setGameState((prev) => {
       if (prev.fragments.includes(fragmentId)) return prev;
 
       return {
@@ -92,16 +95,14 @@ export const GameProvider = ({ children }) => {
   };
 
   const completeRound = (roundId) => {
-    setGameState(prev => ({
+    setGameState((prev) => ({
       ...prev,
-      completedRounds: Array.from(
-        new Set([...prev.completedRounds, roundId])
-      ),
+      completedRounds: Array.from(new Set([...prev.completedRounds, roundId])),
     }));
   };
 
   const markIntroSeen = () => {
-    setGameState(prev => ({
+    setGameState((prev) => ({
       ...prev,
       seenIntro: true,
     }));
