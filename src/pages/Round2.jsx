@@ -1,257 +1,297 @@
 import React, { useEffect, useState } from "react";
-import { motion as Motion, AnimatePresence } from "framer-motion";
-import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock } from "lucide-react";
+import { motion as Motion } from "framer-motion";
 import TerminalCard from "../components/TerminalCard";
 import NeonButton from "../components/NeonButton";
+import { useGame } from "../context/GameContext";
+import CyberBackground from "../components/CyberBackground";
+import GlitchText from "../components/GlitchText";
 import { useNavigate } from "react-router-dom";
 
-const TOTAL_NODES = 20;
+const ROUND_TIME = 900;
+const QUESTION_TIME = 15;
 
-const Round2Phase1 = () => {
+const Round2 = () => {
+  const { gameState } = useGame();
   const navigate = useNavigate();
 
   const [questions, setQuestions] = useState([]);
-  const [nodes, setNodes] = useState(
-    Array.from({ length: TOTAL_NODES }, (_, i) => ({
-      id: i,
-      status: "locked",
-    }))
-  );
+  const [current, setCurrent] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+
+  const [roundTime, setRoundTime] = useState(ROUND_TIME);
+  const [questionTime, setQuestionTime] = useState(QUESTION_TIME);
 
   const [tokens, setTokens] = useState(0);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [userAnswer, setUserAnswer] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState(null);
-  const [error, setError] = useState(null);
+  const [answerStatus, setAnswerStatus] = useState(null);
 
+  const [streak, setStreak] = useState(0);
+  const [comboMultiplier, setComboMultiplier] = useState(1);
+
+  const activeQuestion = questions[current];
+
+  // ================= INIT ROUND =================
   useEffect(() => {
-    const savedNodes = localStorage.getItem("round2_phase1_nodes");
-    const savedTokens = localStorage.getItem("round2_phase1_tokens");
-
-    if (savedNodes) setNodes(JSON.parse(savedNodes));
-    if (savedTokens) setTokens(parseInt(savedTokens, 10));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("round2_phase1_nodes", JSON.stringify(nodes));
-  }, [nodes]);
-
-  useEffect(() => {
-    localStorage.setItem("round2_phase1_tokens", tokens.toString());
-  }, [tokens]);
-
-  useEffect(() => {
-    const fetchQuestions = async () => {
+    const init = async () => {
       try {
-        const token = localStorage.getItem("BLOCKVERSE_TOKEN");
         const res = await fetch(
-          "https://blockverse-backend.onrender.com/api/round2/phase1/questions",
+          "https://blockverse-backend.onrender.com/api/round2/init",
           {
-            headers: { Authorization: `Bearer ${token}` },
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("BLOCKVERSE_TOKEN")}`,
+            },
           }
         );
 
         const json = await res.json();
-        if (!res.ok || !json?.data?.questions)
-          throw new Error("Failed to load questions");
 
-        setQuestions(json.data.questions.sort((a, b) => a.order - b.order));
+        if (!res.ok) {
+          console.error(json);
+          return;
+        }
+
+        setQuestions(json.data.questions);
+        setTokens(json.data.tokens);
+        setRoundTime(Math.floor(json.data.timeRemainingMs / 1000));
       } catch (err) {
-        setError(err.message);
+        console.error(err);
       }
     };
 
-    fetchQuestions();
+    init();
   }, []);
 
+  // ================= ROUND TIMER =================
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRoundTime((t) => (t > 0 ? t - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // ================= QUESTION TIMER =================
+  useEffect(() => {
+    if (!activeQuestion) return;
+
+    setQuestionTime(QUESTION_TIME);
+
+    const timer = setInterval(() => {
+      setQuestionTime((t) => {
+        if (t <= 1) {
+          nextQuestion();
+          return QUESTION_TIME;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [current]);
+
+  // ================= NEXT QUESTION =================
+  const nextQuestion = () => {
+    setSelectedIndex(null);
+    setAnswerStatus(null);
+
+    setCurrent((prev) => {
+      if (prev + 1 >= questions.length) return prev;
+      return prev + 1;
+    });
+  };
+
+  // ================= SUBMIT ANSWER =================
   const submitAnswer = async () => {
-    if (
-      !userAnswer.trim() ||
-      submitting ||
-      nodes[currentIndex].status !== "locked"
-    )
-      return;
+    if (selectedIndex === null || submitting || !activeQuestion) return;
 
     setSubmitting(true);
-    setFeedback(null);
+    setAnswerStatus(null);
+
+    const payload = {
+      questionId: activeQuestion.questionId,
+      answer: activeQuestion.options[selectedIndex].trim(),
+    };
 
     try {
       const res = await fetch(
-        "https://blockverse-backend.onrender.com/api/round2/phase1/submit",
+        "https://blockverse-backend.onrender.com/api/round2/submit",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("BLOCKVERSE_TOKEN")}`,
           },
-          body: JSON.stringify({
-            questionId: questions[currentIndex].questionId,
-            answer: userAnswer.trim(),
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
       const json = await res.json();
+      console.log("Backend Response:", json);
 
-      const isCorrect = json?.message === "Correct answer";
-
-      setNodes((prev) => {
-        const copy = [...prev];
-        copy[currentIndex].status = isCorrect ? "unlocked" : "blocked";
-        return copy;
-      });
-
-      if (isCorrect) {
-        setFeedback("correct");
-        setTokens((prev) => prev + 1);
-      } else {
-        setFeedback("incorrect");
+      if (!res.ok) {
+        setAnswerStatus("incorrect");
+        setTimeout(nextQuestion, 1000);
+        return;
       }
 
-      setTimeout(() => {
-        if (currentIndex < TOTAL_NODES - 1) {
-          setCurrentIndex((i) => i + 1);
-          setUserAnswer("");
-          setFeedback(null);
-        }
-      }, 700);
-    } catch {
-      setFeedback("error");
+      if (json.data.correct) {
+        setAnswerStatus("correct");
+
+        setTokens(json.data.totalRound2Score);
+
+        setStreak((s) => s + 1);
+        setComboMultiplier((m) => Math.min(m + 0.1, 3));
+      } else {
+        setAnswerStatus("incorrect");
+
+        setStreak(0);
+        setComboMultiplier(1);
+      }
+
+      setTimeout(nextQuestion, 1000);
+    } catch (err) {
+      console.error(err);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const goPrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex((i) => i - 1);
-      setUserAnswer("");
-      setFeedback(null);
-    }
-  };
+  const minutes = String(Math.floor(roundTime / 60)).padStart(2, "0");
+  const seconds = String(roundTime % 60).padStart(2, "0");
 
-  const goNext = () => {
-    if (currentIndex < TOTAL_NODES - 1) {
-      setCurrentIndex((i) => i + 1);
-      setUserAnswer("");
-      setFeedback(null);
-    }
-  };
+  const isRoundComplete = current + 1 >= questions.length || roundTime <= 0;
 
-  if (error) return <div className="p-6 text-red-500">{error}</div>;
-  if (!questions.length) return null;
-
-  const solved = nodes.filter((n) => n.status === "unlocked").length;
-  const progress = ((currentIndex + 1) / TOTAL_NODES) * 100;
-  const isLocked = nodes[currentIndex].status !== "locked";
+  if (!activeQuestion) return <div className="p-6 text-white">Loading...</div>;
 
   return (
-    <div className="flex-1 pt-12 px-6 flex gap-8">
-      {/* QUESTION AREA */}
-      <div className="flex-1 flex justify-center">
-        <AnimatePresence mode="wait">
-          <Motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-4xl"
+    <Motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex-1 pt-6 px-6 flex gap-6 relative"
+    >
+      <CyberBackground />
+
+      <div className="flex-1 grid grid-cols-[1fr_auto] gap-8 items-start">
+
+        {/* QUESTION AREA */}
+        <div className="flex-1 max-w-3xl mx-auto">
+          <TerminalCard
+            title={`QUESTION ${current + 1}`}
+            headerColor="cyan"
+            className="w-full"
           >
-            <TerminalCard title="TECH KNOWLEDGE BASE">
-              <div className="flex items-center gap-4 mb-6 font-mono text-sm text-neon-cyan/70">
-                <span>
-                  Q {currentIndex + 1}/{TOTAL_NODES}
-                </span>
-                <div className="flex-1 h-1 bg-gray-800 rounded">
-                  <Motion.div
-                    className="h-full bg-neon-cyan"
-                    animate={{ width: `${progress}%` }}
-                  />
+            <div className="space-y-6">
+
+              <p className="text-neon-cyan font-mono text-lg">
+                {activeQuestion.questionText}
+              </p>
+
+              {/* TIMER BAR */}
+              <div className="h-2 bg-black border border-neon-cyan">
+                <div
+                  className="h-full bg-neon-cyan"
+                  style={{ width: `${(questionTime / QUESTION_TIME) * 100}%` }}
+                />
+              </div>
+
+              {/* OPTIONS */}
+              <div className="space-y-3">
+                {activeQuestion.options.map((opt, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedIndex(idx)}
+                    className={`w-full p-3 border text-left font-mono transition
+                    ${
+                      selectedIndex === idx
+                        ? "border-neon-green bg-neon-green/10"
+                        : "border-neon-cyan"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+
+              {answerStatus && (
+                <div
+                  className={`text-center font-mono mt-2 ${
+                    answerStatus === "correct"
+                      ? "text-neon-green"
+                      : "text-red-500"
+                  }`}
+                >
+                  {answerStatus === "correct"
+                    ? "✔ CORRECT - TOKEN AWARDED"
+                    : "✖ INCORRECT"}
                 </div>
-                <Activity size={16} />
-              </div>
+              )}
 
-              <h3 className="text-2xl font-orbitron text-white text-center mb-8">
-                {questions[currentIndex].question}
-              </h3>
+              <NeonButton
+                onClick={submitAnswer}
+                disabled={selectedIndex === null || submitting}
+                className="w-full"
+              >
+                {submitting ? "SUBMITTING..." : "LOCK ANSWER"}
+              </NeonButton>
 
-              <input
-                type="text"
-                value={userAnswer}
-                disabled={isLocked}
-                onChange={(e) => setUserAnswer(e.target.value)}
-                placeholder="Enter your answer..."
-                className={`w-full p-4 bg-black border-2 font-mono text-white ${
-                  isLocked
-                    ? "border-gray-700 opacity-50"
-                    : "border-neon-cyan/40"
-                }`}
-              />
+            </div>
+          </TerminalCard>
 
-              <div className="mt-4 font-mono text-sm h-5">
-                {feedback === "correct" && (
-                  <span className="text-neon-green">✔ Correct (+1 TOKEN)</span>
-                )}
-                {feedback === "incorrect" && (
-                  <span className="text-red-500">✖ Incorrect</span>
-                )}
-              </div>
-
-              <div className="mt-10 flex justify-between items-center">
-                <NeonButton
-                  className="w-40"
-                  variant="secondary"
-                  onClick={goPrev}
-                  disabled={currentIndex === 0}
-                >
-                  <ChevronLeft size={16} /> PREVIOUS
-                </NeonButton>
-
-                <NeonButton
-                  className="w-40"
-                  onClick={submitAnswer}
-                  disabled={isLocked || submitting || !userAnswer.trim()}
-                >
-                  EXECUTE
-                </NeonButton>
-
-                <NeonButton
-                  className="w-40"
-                  variant="secondary"
-                  onClick={goNext}
-                  disabled={currentIndex === TOTAL_NODES - 1}
-                >
-                  NEXT <ChevronRight size={16} />
-                </NeonButton>
-              </div>
-            </TerminalCard>
-          </Motion.div>
-        </AnimatePresence>
-      </div>
-
-      {/* SIDEBAR */}
-      <div className="w-80">
-        <TerminalCard title="ROUND 2 — PHASE 1" headerColor="cyan">
-          <div className="space-y-3 font-mono text-sm">
-            <p>
-              SOLVED:{" "}
-              <span className="text-neon-green">
-                {solved}/{TOTAL_NODES}
-              </span>
-            </p>
-            <p className="text-yellow-300 text-xl">TOKENS: {tokens}</p>
-
-            <NeonButton
-              className="mt-4 w-full"
-              onClick={() => navigate("/round2/phase2")}
-            >
-              PROCEED TO PHASE 2 →
-            </NeonButton>
+          <div className="text-center text-neon-cyan font-mono mt-2">
+            Question {current + 1} / {questions.length}
           </div>
-        </TerminalCard>
+        </div>
+
+        {/* SIDEBAR */}
+        <div className="w-80">
+          <TerminalCard
+            title="ROUND 2 STATUS"
+            headerColor="gold"
+            className="backdrop-blur-md bg-black/40 border-neon-cyan/60"
+          >
+            <div className="space-y-4 font-mono text-sm">
+
+              <div className="text-neon-cyan flex items-center gap-2">
+                <span>ROUND:</span>
+                <GlitchText text="RAPID FIRE" as="span" size="small" />
+              </div>
+
+              <div className="flex items-center gap-2 text-neon-cyan">
+                <Clock size={14} />
+                <span>
+                  TIME LEFT: {minutes}:{seconds}
+                </span>
+              </div>
+
+              <div className="h-2 bg-black/40 border border-neon-cyan/40">
+                <div
+                  className="h-full bg-neon-cyan"
+                  style={{ width: (roundTime / ROUND_TIME) * 100 + "%" }}
+                />
+              </div>
+
+              <div className="text-neon-green">
+                TOKENS: {tokens} • Streak: {streak} • Combo x
+                {comboMultiplier.toFixed(1)}
+              </div>
+
+              <NeonButton
+                className="mt-4 w-full"
+                onClick={() => navigate("/panel/round3")}
+                disabled={!isRoundComplete}
+              >
+                PROCEED TO ROUND 3 →
+              </NeonButton>
+
+            </div>
+          </TerminalCard>
+        </div>
+
       </div>
-    </div>
+    </Motion.div>
   );
 };
 
-export default Round2Phase1;
+export default Round2;
