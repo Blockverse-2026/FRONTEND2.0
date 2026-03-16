@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const LOCK_TIME = 5000;    
+const LOCK_TIME = 50;    
 const AUTO_TIME = 15000;   
 
 const PanelPlayer = ({ panels = [], onComplete }) => {
