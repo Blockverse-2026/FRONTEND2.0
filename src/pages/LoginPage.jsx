@@ -20,7 +20,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    setAnaDialogue("Authentication required. Please enter Team ID.");
+    setAnaDialogue("Authentication required. Please enter Team Name.");
   }, [setAnaDialogue]);
 
   const handleSubmit = async (e) => {
@@ -105,7 +105,7 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-neon-cyan font-mono text-sm mb-2">
-                TEAM ID
+                TEAM NAME
               </label>
               <input
                 value={formData.teamId}
@@ -113,7 +113,7 @@ const LoginPage = () => {
                   setFormData({ ...formData, teamId: e.target.value })
                 }
                 className="w-full bg-black/50 border border-neon-cyan/30 text-white p-3 font-mono focus:border-neon-cyan focus:outline-none"
-                placeholder="ENTER TEAM ID"
+                placeholder="ENTER TEAM NAME"
                 disabled={isProcessing}
               />
             </div>
