@@ -34,7 +34,7 @@ const BlackMarket = () => {
     const fetchStore = async () => {
       try {
         const res = await fetch(
-          "https://blockverse-backend.onrender.com/api/round2/phase2/store",
+          "https://blockverse-backend.onrender.com/api/round2/store",
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("BLOCKVERSE_TOKEN")}`,
@@ -67,7 +67,7 @@ const BlackMarket = () => {
 
     try {
       const res = await fetch(
-        "https://blockverse-backend.onrender.com/api/round2/phase2/store/buy",
+        "https://blockverse-backend.onrender.com/api/round2/store/buy",
         {
           method: "POST",
           headers: {

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import GlitchText from "../components/GlitchText";
 import NeonButton from "../components/NeonButton";
 
-const API = "https://blockverse-backend.onrender.com";
+// const API = "https://blockverse-backend.onrender.com";
 
 const Round3Bomb = () => {
   const { id } = useParams();
@@ -19,7 +19,7 @@ const Round3Bomb = () => {
   const initRound = () => {
     const token = localStorage.getItem("BLOCKVERSE_TOKEN");
 
-    fetch(`${API}/api/round3/init`, {
+    fetch(`https://blockverse-backend.onrender.com/api/round3/init`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -116,7 +116,7 @@ const Round3Bomb = () => {
     setSubmitting(true);
     const token = localStorage.getItem("BLOCKVERSE_TOKEN");
 
-    fetch(`${API}/api/round3/submit`, {
+    fetch(`https://blockverse-backend.onrender.com/api/round3/submit`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
