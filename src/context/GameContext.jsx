@@ -35,7 +35,7 @@ export const GameProvider = ({ children }) => {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
           // Merge with default state to ensure all properties exist
-          return { ...defaultState, ...parsed, completedRounds: [], seenIntro: false };
+          return { ...defaultState, ...parsed };
         }
       } catch (e) {
         console.error("Failed to parse game state", e);
@@ -102,13 +102,20 @@ export const GameProvider = ({ children }) => {
   };
 
   /* ================= PROGRESSION ================= */
-  const unlockFragment = (fragmentId) => {
+  const unlockFragment = (fragment) => {
     setGameState((prev) => {
-      if (prev.fragments.includes(fragmentId)) return prev;
+      // Check if fragment already exists (by ID or data)
+      const exists = prev.fragments.some(f => 
+        (typeof f === 'string' && f === fragment) || 
+        (f.id === fragment.id) || 
+        (f.clueId === fragment.clueId)
+      );
+      
+      if (exists) return prev;
 
       return {
         ...prev,
-        fragments: [...prev.fragments, fragmentId],
+        fragments: [...prev.fragments, fragment],
         points: prev.points + 500,
       };
     });

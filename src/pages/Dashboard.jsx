@@ -48,13 +48,13 @@ const Dashboard = () => {
   const [reveal, setReveal] = useState(0);
   const starsRef = useRef([]);
 
-  const isRound2Locked = !gameState.completedRounds.includes("round1");
-  const isRound3Locked = !gameState.completedRounds.includes("round1");
-
-
   const isRound1Complete = gameState.completedRounds.includes("round1");
   const isRound2Complete = gameState.completedRounds.includes("round2");
   const isRound3Complete = gameState.completedRounds.includes("round3");
+
+  const isRound1Locked = isRound1Complete;
+  const isRound2Locked = !isRound1Complete || isRound2Complete;
+  const isRound3Locked = !isRound2Complete;
 
 
   useEffect(() => {
@@ -324,7 +324,7 @@ const Dashboard = () => {
                         className="flex items-center gap-2 text-neon-green text-sm font-mono"
                       >
                         <Database size={16} />
-                        <span>{frag.toUpperCase()} FRAGMENT</span>
+                        <span>{(typeof frag === 'string' ? frag : (frag.title || `FRAGMENT ${idx + 1}`)).toUpperCase()}</span>
                       </Motion.div>
                     ))
                   )}
@@ -339,11 +339,16 @@ const Dashboard = () => {
           >
            <Motion.div variants={itemVariants}>
   <NeonButton
-    className="w-full flex items-center justify-between group"
-    onClick={() => navigate("/panel/round1-intro")}
+    className={`w-full flex items-center justify-between group ${
+      isRound1Locked
+        ? "cursor-not-allowed filter grayscale contrast-50 opacity-60"
+        : ""
+    }`}
+    onClick={() => !isRound1Locked && navigate("/panel/round1-intro")}
   >
     <div className="flex flex-col items-start">
       <span>ROUND 1: FIREWALL</span>
+      {isRound1Locked && <Lock size={16} className="mt-1" />}
       {isRound1Complete && (
         <div className="flex items-center gap-1 text-neon-green text-xs mt-1">
           <Check size={12} />
@@ -358,7 +363,9 @@ const Dashboard = () => {
 <Motion.div variants={itemVariants}>
   <NeonButton
     className={`w-full flex items-center justify-between group ${
-      isRound2Locked ? "opacity-50 cursor-not-allowed" : ""
+      isRound2Locked
+        ? "cursor-not-allowed filter grayscale contrast-50 opacity-60"
+        : ""
     }`}
     variant="secondary"
     onClick={() => !isRound2Locked && navigate("/panel/round2-intro")}
@@ -385,7 +392,9 @@ const Dashboard = () => {
 <Motion.div variants={itemVariants}>
   <NeonButton
     className={`w-full flex items-center justify-between group ${
-      isRound3Locked ? "opacity-50 cursor-not-allowed" : ""
+      isRound3Locked
+        ? "cursor-not-allowed filter grayscale contrast-50 opacity-60"
+        : ""
     }`}
     variant="danger"
     onClick={() => !isRound3Locked && navigate("/panel/round3-intro")}
@@ -442,6 +451,20 @@ const Dashboard = () => {
                       <span>SYSTEM LOAD</span>
                       <span>75%</span>
                     </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <button 
+                      onClick={() => {
+                        localStorage.removeItem("BLOCKVERSE_GAME_STATE");
+                        localStorage.removeItem("round1_nodes");
+                        localStorage.removeItem("round1_score");
+                        window.location.reload();
+                      }}
+                      className="w-full py-2 border border-red-900/30 text-red-900/50 hover:border-red-600 hover:text-red-600 text-[10px] tracking-widest font-mono transition-all uppercase"
+                    >
+                      [ RESET_CORE_PROGRESS ]
+                    </button>
                   </div>
                 </div>
               </TerminalCard>

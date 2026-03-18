@@ -16,18 +16,28 @@ const getRiskMeta = (cost) => {
 
 const BlackMarket = () => {
   const navigate = useNavigate();
-  const { addTokens } = useGame();
+  const { gameState, addTokens, unlockFragment } = useGame();
 
   const [clues, setClues] = useState([]);
   const [tokens, setTokens] = useState(0);
   const [ownedClues, setOwnedClues] = useState(new Set());
 
-  const [selectedClue, setSelectedClue] = useState(null);
-  const [clueModalOpen, setClueModalOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [transactionError, setTransactionError] = useState(null);
-  const [error, setError] = useState(null);
+   const [selectedClue, setSelectedClue] = useState(null);
+   const [clueModalOpen, setClueModalOpen] = useState(false);
+   const [confirmOpen, setConfirmOpen] = useState(false);
+   const [verifying, setVerifying] = useState(false);
+   const [transactionError, setTransactionError] = useState(null);
+   const [error, setError] = useState(null);
+
+   // Initialize ownedClues from gameState
+   useEffect(() => {
+    if (gameState.fragments) {
+      const ownedIds = gameState.fragments
+        .filter(f => f.clueId)
+        .map(f => f.clueId);
+      setOwnedClues(new Set(ownedIds));
+    }
+  }, [gameState.fragments]);
 
   
   useEffect(() => {
@@ -88,7 +98,11 @@ const BlackMarket = () => {
       }
 
       addTokens(-selectedClue.tokenCost);
-      setOwnedClues((prev) => new Set(prev).add(selectedClue.clueId));
+      unlockFragment({
+        clueId: selectedClue.clueId,
+        title: selectedClue.title,
+        data: selectedClue.description, // Round 3 expects 'data' field
+      });
       setConfirmOpen(true);
     } catch {
       setTransactionError("Transaction failed");

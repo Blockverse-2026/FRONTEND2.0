@@ -47,8 +47,9 @@ const Round1 = () => {
   useEffect(() => {
     if (nodes.every((n) => n.status !== "locked") && !earlyFinish && timeLeft > 0) {
       setEarlyFinish(true);
+      completeRound("round1");
     }
-  }, [nodes, earlyFinish, timeLeft]);
+  }, [nodes, earlyFinish, timeLeft, completeRound]);
 
   useEffect(() => {
     if (timeLeft <= 0 && !showSummary) {
@@ -509,11 +510,15 @@ const Round1 = () => {
           <div className="p-6 border border-neon-green/30 bg-neon-green/10 font-mono text-neon-green">
             <h3 className="text-2xl font-bold mb-4 animate-pulse">EARLY FINISHER DETECTED</h3>
             <p className="mb-4">All nodes have been successfully decrypted.</p>
-            <p className="text-sm opacity-80 uppercase tracking-widest">
-              Please wait for the round timer to expire to proceed.
-              <br />
-              Time remaining: <span className="text-white font-bold">{minutes}:{seconds}</span>
+            <p className="text-sm opacity-80 uppercase tracking-widest mb-6">
+              Firewall bypassed ahead of schedule. Access to next sector is now available.
             </p>
+            <NeonButton 
+              className="w-full py-4 font-orbitron shadow-[0_0_30px_rgba(0,246,255,0.3)]"
+              onClick={() => navigate("/dashboard")}
+            >
+              RETURN TO DASHBOARD &gt;&gt;
+            </NeonButton>
           </div>
         </div>
       </Modal>

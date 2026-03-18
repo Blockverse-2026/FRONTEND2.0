@@ -255,7 +255,10 @@ const Round3Bomb = () => {
                 <ul className="space-y-4 text-sm font-mono text-white/80">
                   {gameState.fragments.map((fragment, i) => (
                     <li key={i} className="border-l-4 border-neon-cyan/40 pl-4 leading-relaxed">
-                      {fragment.data}
+                      <div className="text-neon-cyan text-[10px] uppercase mb-1">
+                        {typeof fragment === 'string' ? 'System Data' : (fragment.title || 'Intel Fragment')}
+                      </div>
+                      {typeof fragment === 'string' ? fragment : fragment.data}
                     </li>
                   ))}
                 </ul>
