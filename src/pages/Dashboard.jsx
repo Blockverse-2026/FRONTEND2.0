@@ -489,6 +489,7 @@ const Dashboard = () => {
         onClose={() => {}}
         title="ANA // SYSTEM AI"
         showClose={false}
+        headerColor="cyan"
       >
         <div className="space-y-6">
           <div className="p-4 border border-neon-cyan/30 bg-black/50 font-mono text-neon-cyan">

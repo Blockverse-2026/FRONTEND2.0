@@ -414,7 +414,7 @@ const Round1 = () => {
                   {unlockedCount}/{TOTAL_NODES}
                 </span>
               </p>
-              <div className="h-2 bg-black/40 border border-neon-cyan/40">
+              <div className="h-2 bg-black/40 border border-neon-cyan/40 overflow-hidden">
                 <div
                   className="h-full bg-neon-green"
                   style={{ width: unlockedPct + "%" }}
@@ -427,7 +427,7 @@ const Round1 = () => {
                   TIME LIMITED ROUND • {minutes}:{seconds}
                 </span>
               </div>
-              <div className="h-2 bg-black/40 border border-neon-cyan/40">
+              <div className="h-2 bg-black/40 border border-neon-cyan/40 overflow-hidden">
                 <div
                   className="h-full bg-neon-cyan"
                   style={{ width: (timeLeft / 300) * 100 + "%" }}

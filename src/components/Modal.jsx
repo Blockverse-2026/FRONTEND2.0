@@ -10,8 +10,12 @@ const Modal = ({
   children,
   showClose = true,
   fullScreen = false,
+  headerColor = 'gold', // Default back to gold to keep other modals consistent
 }) => {
   if (!isOpen) return null;
+
+  const shadowClass =
+    headerColor === 'gold' ? 'shadow-neon-gold border-neon-gold' : 'shadow-neon border-neon-cyan';
 
   return (
     <AnimatePresence>
@@ -39,8 +43,8 @@ const Modal = ({
           >
             <TerminalCard
               title={title}
-              headerColor="gold"
-              className={`border-neon-gold shadow-neon-gold ${
+              headerColor={headerColor}
+              className={`${shadowClass} ${
                 fullScreen ? 'h-[85vh]' : ''
               }`}
             >
