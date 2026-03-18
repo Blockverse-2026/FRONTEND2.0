@@ -35,7 +35,7 @@ export const GameProvider = ({ children }) => {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
           // Merge with default state to ensure all properties exist
-          return { ...defaultState, ...parsed };
+          return { ...defaultState, ...parsed, completedRounds: [], seenIntro: false };
         }
       } catch (e) {
         console.error("Failed to parse game state", e);

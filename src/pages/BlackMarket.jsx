@@ -87,7 +87,6 @@ const BlackMarket = () => {
         return;
       }
 
-      setTokens(json.data.tokensAvailable);
       addTokens(-selectedClue.tokenCost);
       setOwnedClues((prev) => new Set(prev).add(selectedClue.clueId));
       setConfirmOpen(true);
