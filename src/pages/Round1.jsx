@@ -14,7 +14,7 @@ const ROUND_TIME = 300; // Testing: 5 minutes (300s). For 30 mins, use 1800.
 
 const Round1 = () => {
   const navigate = useNavigate();
-  const { gameState } = useGame();
+  const { gameState, completeRound } = useGame();
 
   const [questions, setQuestions] = useState([]);
   const [nodes, setNodes] = useState(
@@ -38,8 +38,25 @@ const Round1 = () => {
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
   const [comboMultiplier, setComboMultiplier] = useState(1);
-  const [timeLeft, setTimeLeft] = useState(ROUND_TIME);
   const [questionOrder, setQuestionOrder] = useState([]);
+  const [isFinished, setIsFinished] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [earlyFinish, setEarlyFinish] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(ROUND_TIME);
+
+  useEffect(() => {
+    if (nodes.every((n) => n.status !== "locked") && !earlyFinish && timeLeft > 0) {
+      setEarlyFinish(true);
+    }
+  }, [nodes, earlyFinish, timeLeft]);
+
+  useEffect(() => {
+    if (timeLeft <= 0 && !showSummary) {
+      setShowSummary(true);
+      setIsFinished(true);
+      completeRound("round1");
+    }
+  }, [timeLeft, showSummary, completeRound]);
 
   useEffect(() => {
     const savedNodes = localStorage.getItem("round1_nodes");
@@ -467,9 +484,12 @@ const Round1 = () => {
               </div>
 
               <NeonButton
-                className="mt-4 w-full opacity-50 cursor-not-allowed"
-                onClick={() => navigate("/panel/round2-intro")}
-                disabled={true}
+                className={`mt-4 w-full transition-all duration-500
+                  ${timeLeft <= 0 
+                    ? "shadow-[0_0_20px_rgba(0,246,255,0.3)] opacity-100" 
+                    : "opacity-50 grayscale cursor-not-allowed"}`}
+                onClick={() => timeLeft <= 0 && navigate("/panel/round2-intro")}
+                disabled={timeLeft > 0}
               >
                 PROCEED TO ROUND 2 →
               </NeonButton>
@@ -477,6 +497,60 @@ const Round1 = () => {
           </TerminalCard>
         </div>
       </div>
+
+      {/* EARLY FINISH MODAL */}
+      <Modal
+        isOpen={earlyFinish && timeLeft > 0}
+        onClose={() => {}}
+        title="SYSTEM CLEAR"
+        showClose={false}
+      >
+        <div className="space-y-6 text-center">
+          <div className="p-6 border border-neon-green/30 bg-neon-green/10 font-mono text-neon-green">
+            <h3 className="text-2xl font-bold mb-4 animate-pulse">EARLY FINISHER DETECTED</h3>
+            <p className="mb-4">All nodes have been successfully decrypted.</p>
+            <p className="text-sm opacity-80 uppercase tracking-widest">
+              Please wait for the round timer to expire to proceed.
+              <br />
+              Time remaining: <span className="text-white font-bold">{minutes}:{seconds}</span>
+            </p>
+          </div>
+        </div>
+      </Modal>
+
+      {/* TIME UP / SUMMARY MODAL */}
+      <Modal
+        isOpen={showSummary}
+        onClose={() => {}}
+        title="ROUND COMPLETE"
+        showClose={false}
+        headerColor="gold"
+      >
+        <div className="space-y-6 text-center">
+          <div className="p-6 border border-neon-gold/30 bg-neon-gold/10 font-mono text-neon-gold">
+            <h3 className="text-2xl font-bold mb-4 uppercase tracking-tighter">
+              {timeLeft <= 0 ? "TIME EXPIRED" : "SEQUENCE TERMINATED"}
+            </h3>
+            <div className="space-y-2 mb-6">
+              <p className="text-sm opacity-60">FINAL DATA RECOVERED:</p>
+              <p className="text-4xl font-bold text-white tracking-widest">
+                {Math.round(score)} <span className="text-xs">PTS</span>
+              </p>
+            </div>
+            <p className="text-xs opacity-70 uppercase tracking-[0.2em]">
+              Firewall grid integrity: {unlockedPct}%
+              <br />
+              Round 2 access: GRANTED
+            </p>
+          </div>
+          <NeonButton 
+            className="w-full py-4 font-orbitron shadow-[0_0_30px_rgba(0,246,255,0.3)]"
+            onClick={() => navigate("/panel/round2-intro")}
+          >
+            LET'S GO TO ROUND 2 &gt;&gt;
+          </NeonButton>
+        </div>
+      </Modal>
 
       <Modal
         isOpen={!!selectedNode}

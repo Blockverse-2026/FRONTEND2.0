@@ -20,6 +20,7 @@ import Round2 from "./pages/Round2";
 import BlackMarket from "./pages/BlackMarket";
 import Round3 from "./pages/Round3";
 import Round3Bomb from "./pages/Round3Bomb";
+import GameOver from "./pages/GameOver";
 
 import PanelPlayer from "./components/PanelPlayer";
 import { PANELS_DATA } from "./utils/panelsData";
@@ -107,10 +108,12 @@ function App() {
                 element={
                   <PanelRoute
                     panelKey={PANELS.FINAL}
-                    next="/"
+                    next="/game-over"
                   />
                 }
               />
+
+              <Route path="/game-over" element={<GameOver />} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
