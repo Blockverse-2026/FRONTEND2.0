@@ -2,8 +2,11 @@ import React from "react";
 import { motion } from "framer-motion";
 import GlitchText from "../components/GlitchText";
 import CyberBackground from "../components/CyberBackground";
+import { useNavigate } from "react-router-dom";
 
 const GameOver = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-black p-6">
       <CyberBackground color="#ff0000" opacity={0.1} />
@@ -37,6 +40,15 @@ const GameOver = () => {
             Data Extraction Complete. The Genova Realm is now inaccessible.
           </div>
         </motion.div>
+        <motion.button
+          onClick={() => navigate("/leaderboard")}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1, duration: 0.8 }}
+          className="mt-8 px-6 py-2 text-lg font-mono uppercase tracking-widest border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-black transition-all duration-300"
+        >
+          Leaderboard
+        </motion.button>
       </motion.div>
 
       {/* DECORATIVE CORNERS */}

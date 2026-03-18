@@ -21,6 +21,7 @@ import BlackMarket from "./pages/BlackMarket";
 import Round3 from "./pages/Round3";
 import Round3Bomb from "./pages/Round3Bomb";
 import GameOver from "./pages/GameOver";
+import Leaderboard from "./pages/Leaderboard";
 
 import PanelPlayer from "./components/PanelPlayer";
 import { PANELS_DATA } from "./utils/panelsData";
@@ -114,6 +115,7 @@ function App() {
               />
 
               <Route path="/game-over" element={<GameOver />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
