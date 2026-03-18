@@ -59,6 +59,7 @@ const Dashboard = () => {
 
 
   useEffect(() => {
+    if (!gameState) return;
     queueMicrotask(() => {
       if (!gameState.seenIntro) {
         setIntroOpen(true);
@@ -68,7 +69,7 @@ const Dashboard = () => {
       }
       setAnaVisible(false);
     });
-  }, [gameState.seenIntro, setAnaDialogue, setAnaVisible]);
+  }, [gameState?.seenIntro, setAnaDialogue, setAnaVisible]);
 
 
   useEffect(() => {

@@ -293,6 +293,7 @@ const Round1 = () => {
   }
 
   const unlockedCount = nodes.filter((n) => n.status === "unlocked").length;
+  const remainingCount = nodes.filter((n) => n.status === "locked").length;
   const unlockedPct = Math.round((unlockedCount / TOTAL_NODES) * 100);
   const minutes = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   const seconds = String(timeLeft % 60).padStart(2, "0");
@@ -420,6 +421,13 @@ const Round1 = () => {
                   style={{ width: unlockedPct + "%" }}
                 />
               </div>
+
+              <p>
+                REMAINING QUESTIONS:{" "}
+                <span className="text-neon-cyan">
+                  {remainingCount}
+                </span>
+              </p>
 
               <div className="flex items-center gap-2 text-neon-cyan">
                 <Clock size={14} />

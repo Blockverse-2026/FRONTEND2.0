@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
-import { motion as Motion } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import TerminalCard from "../components/TerminalCard";
 import NeonButton from "../components/NeonButton";
+import Modal from "../components/Modal";
 import { useGame } from "../context/GameContext";
 import CyberBackground from "../components/CyberBackground";
 import GlitchText from "../components/GlitchText";
@@ -12,7 +13,7 @@ const ROUND_TIME = 900;
 const QUESTION_TIME = 15;
 
 const Round2 = () => {
-  const { gameState } = useGame();
+  const { gameState, completeRound, setAnaDialogue } = useGame();
   const navigate = useNavigate();
 
   const [questions, setQuestions] = useState([]);
@@ -28,10 +29,20 @@ const Round2 = () => {
 
   const [streak, setStreak] = useState(0);
   const [comboMultiplier, setComboMultiplier] = useState(1);
+  const [showBriefing, setShowBriefing] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
 
   const activeQuestion = questions[current];
 
-  // ================= INIT ROUND =================
+  const isRoundComplete = isFinished || roundTime <= 0;
+
+  useEffect(() => {
+    if (isRoundComplete && !showBriefing) {
+      completeRound("round2");
+      setShowBriefing(true);
+      setAnaDialogue("Rapid-fire sequence terminated. Excellent performance. Accessing Black Market data...");
+    }
+  }, [isRoundComplete, showBriefing, completeRound, setAnaDialogue]);
   useEffect(() => {
     const init = async () => {
       try {
@@ -77,7 +88,11 @@ const Round2 = () => {
 
   // ================= QUESTION TIMER =================
   useEffect(() => {
-    if (!activeQuestion) return;
+    // Stop the timer if no active question, round time is out, or it's the last question
+    if (!activeQuestion || roundTime <= 0 || isFinished) return;
+
+    // Optional: Stop question timer if on last question and round is basically complete
+    // but usually we want to let them finish the last question unless time is up.
 
     setQuestionTime(QUESTION_TIME);
 
@@ -92,7 +107,7 @@ const Round2 = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [current]);
+  }, [current, !!activeQuestion, roundTime <= 0, isFinished]);
 
   // ================= NEXT QUESTION =================
   const nextQuestion = () => {
@@ -100,7 +115,10 @@ const Round2 = () => {
     setAnswerStatus(null);
 
     setCurrent((prev) => {
-      if (prev + 1 >= questions.length) return prev;
+      if (prev + 1 >= questions.length) {
+        setIsFinished(true);
+        return prev;
+      }
       return prev + 1;
     });
   };
@@ -163,8 +181,6 @@ const Round2 = () => {
 
   const minutes = String(Math.floor(roundTime / 60)).padStart(2, "0");
   const seconds = String(roundTime % 60).padStart(2, "0");
-
-  const isRoundComplete = current + 1 >= questions.length || roundTime <= 0;
 
   if (!activeQuestion) return <div className="p-6 text-white">Loading...</div>;
 
@@ -238,30 +254,39 @@ const Round2 = () => {
                 ))}
               </div>
 
-              {answerStatus && (
-                <Motion.div
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  className={`text-center font-orbitron text-lg tracking-widest p-4 rounded border
-                    ${
-                      answerStatus === "correct"
-                        ? "text-neon-green border-neon-green/30 bg-neon-green/5 shadow-[0_0_20px_rgba(57,255,20,0.1)]"
-                        : "text-red-500 border-red-500/30 bg-red-500/5 shadow-[0_0_20px_rgba(255,0,0,0.1)]"
-                    }`}
+              <div className="relative">
+                <NeonButton
+                  onClick={submitAnswer}
+                  disabled={selectedIndex === null || submitting || !!answerStatus}
+                  className={`w-full py-4 text-lg font-orbitron tracking-[0.2em] shadow-[0_0_20px_rgba(0,246,255,0.2)] transition-all duration-300 ${
+                    answerStatus ? "opacity-0 invisible pointer-events-none" : "opacity-100 visible"
+                  }`}
                 >
-                  {answerStatus === "correct"
-                    ? "✔ ACCESS GRANTED - TOKEN RECOVERED"
-                    : "✖ ACCESS DENIED - SYSTEM STABILIZING..."}
-                </Motion.div>
-              )}
+                  <span className={answerStatus ? "invisible" : "visible"}>
+                    {submitting ? "UPLOADING DATA..." : "LOCK ANSWER"}
+                  </span>
+                </NeonButton>
 
-              <NeonButton
-                onClick={submitAnswer}
-                disabled={selectedIndex === null || submitting}
-                className="w-full py-4 text-lg font-orbitron tracking-[0.2em] shadow-[0_0_20px_rgba(0,246,255,0.2)]"
-              >
-                {submitting ? "UPLOADING DATA..." : "LOCK ANSWER"}
-              </NeonButton>
+                <AnimatePresence>
+                  {answerStatus && (
+                    <Motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className={`absolute inset-0 flex items-center justify-center text-center font-orbitron text-sm md:text-lg tracking-widest px-4 rounded border z-20
+                        ${
+                          answerStatus === "correct"
+                            ? "text-neon-green border-neon-green/30 bg-neon-green/10 backdrop-blur-sm shadow-[0_0_20px_rgba(57,255,20,0.2)]"
+                            : "text-red-500 border-red-500/30 bg-red-500/10 backdrop-blur-sm shadow-[0_0_20px_rgba(255,0,0,0.2)]"
+                        }`}
+                    >
+                      {answerStatus === "correct"
+                        ? "✔ ACCESS GRANTED - TOKEN RECOVERED"
+                        : "✖ ACCESS DENIED - SYSTEM STABILIZING..."}
+                    </Motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* SYSTEM LOG PANEL */}
               <div className="mt-8 border-t border-neon-cyan/20 pt-6">
@@ -321,8 +346,7 @@ const Round2 = () => {
             </div>
           </TerminalCard>
 
-          <div className="flex justify-between items-center px-4 font-mono text-neon-cyan/60 uppercase text-xs tracking-widest">
-            <span>SEQUENCE {current + 1} / {questions.length}</span>
+          <div className="flex justify-end items-center px-4 font-mono text-neon-cyan/60 uppercase text-[10px] tracking-widest">
             <span className="animate-pulse">SYSTEM STABLE // PHASE 1</span>
           </div>
         </Motion.div>
@@ -350,17 +374,9 @@ const Round2 = () => {
               </div>
 
               <div className="space-y-2">
-                <div className="text-neon-gold/60 text-[10px] tracking-[0.3em] uppercase">Time Remaining</div>
-                <div className="flex items-center gap-3 text-2xl text-neon-gold font-orbitron">
-                  <Clock size={20} className="text-neon-gold" />
-                  <span>{minutes}:{seconds}</span>
-                </div>
-                {/* ROUND PROGRESS BAR */}
-                <div className="h-1.5 bg-black/60 border border-neon-gold/20 rounded-full overflow-hidden mt-2">
-                  <Motion.div
-                    animate={{ width: `${(roundTime / ROUND_TIME) * 100}%` }}
-                    className="h-full bg-neon-gold/80"
-                  />
+                <div className="text-neon-gold/60 text-[10px] tracking-[0.3em] uppercase">Sequence</div>
+                <div className="flex items-center gap-3 text-xl text-neon-gold font-orbitron">
+                  <span>{current + 1} / {questions.length}</span>
                 </div>
               </div>
 
@@ -393,7 +409,7 @@ const Round2 = () => {
                   ${isRoundComplete
                     ? "shadow-[0_0_30px_rgba(255,170,0,0.3)] opacity-100"
                     : "opacity-40 grayscale pointer-events-none"}`}
-                onClick={() => navigate("/round3")}
+                onClick={() => navigate("/round2/phase2")}
               >
                 PROCEED TO PHASE 2 →
               </NeonButton>
@@ -407,6 +423,37 @@ const Round2 = () => {
         </Motion.div>
 
       </div>
+
+      <Modal
+        isOpen={showBriefing}
+        onClose={() => {}}
+        title="ANA // SYSTEM AI"
+        showClose={false}
+        headerColor="cyan"
+      >
+        <div className="space-y-6">
+          <div className="p-4 border border-neon-cyan/30 bg-black/50 font-mono text-neon-cyan">
+            Rapid-fire sequence terminated. Excellent performance. 
+            <br /><br />
+            You have accumulated <span className="text-neon-gold font-bold">{tokens} TOKENS</span>.
+            <br /><br />
+            System logs indicate you've unlocked a portal to the <b>BLACK MARKET</b>. Here, you can exchange your hard-earned tokens for critical data fragments and system bypasses.
+            <br /><br />
+            Be cautious. The market is monitored, but it's the only way to gain the upper hand.
+          </div>
+          <div className="flex justify-end">
+            <NeonButton
+              onClick={() => {
+                setShowBriefing(false);
+                navigate("/round2/phase2");
+              }}
+            >
+              ENTER BLACK MARKET &gt;&gt;
+            </NeonButton>
+          </div>
+        </div>
+      </Modal>
+
     </Motion.div>
   );
 };

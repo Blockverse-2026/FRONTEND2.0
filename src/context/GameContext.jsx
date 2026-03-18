@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 /* ======================================================
    CONTEXT
@@ -17,8 +17,8 @@ export const GameProvider = ({ children }) => {
   );
 
   /* ================= GAME STATE ================= */
-  const [gameState, setGameState] = useState({
-    teamDbId: null,
+  const defaultState = {
+    teamId: null,
     teamName: null,
     points: 0,
     tokens: 0,
@@ -26,7 +26,28 @@ export const GameProvider = ({ children }) => {
     securityLevel: "HIGH",
     completedRounds: [],
     seenIntro: false,
+  };
+
+  const [gameState, setGameState] = useState(() => {
+    const saved = localStorage.getItem("BLOCKVERSE_GAME_STATE");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          // Merge with default state to ensure all properties exist
+          return { ...defaultState, ...parsed };
+        }
+      } catch (e) {
+        console.error("Failed to parse game state", e);
+      }
+    }
+    return defaultState;
   });
+
+  // Persist game state whenever it changes
+  useEffect(() => {
+    localStorage.setItem("BLOCKVERSE_GAME_STATE", JSON.stringify(gameState));
+  }, [gameState]);
 
   /* ================= ANA ================= */
   const [anaDialogue, setAnaDialogue] = useState(
@@ -35,13 +56,13 @@ export const GameProvider = ({ children }) => {
   const [anaVisible, setAnaVisible] = useState(false);
 
   /* ================= AUTH ================= */
-  const login = (teamDbId, teamName, accessToken) => {
+  const login = (teamId, teamName, accessToken) => {
     localStorage.setItem("BLOCKVERSE_TOKEN", accessToken);
     setToken(accessToken);
 
     setGameState((prev) => ({
       ...prev,
-      teamDbId,
+      teamId,
       teamName,
     }));
 
@@ -50,6 +71,7 @@ export const GameProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem("BLOCKVERSE_TOKEN");
+    localStorage.removeItem("BLOCKVERSE_GAME_STATE");
     setToken(null);
 
     setGameState({
