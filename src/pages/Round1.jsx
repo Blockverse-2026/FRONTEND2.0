@@ -467,9 +467,9 @@ const Round1 = () => {
               </div>
 
               <NeonButton
-                className="mt-4 w-full"
+                className="mt-4 w-full opacity-50 cursor-not-allowed"
                 onClick={() => navigate("/panel/round2-intro")}
-                disabled={unlockedCount < 5 || timeLeft === 0}
+                disabled={true}
               >
                 PROCEED TO ROUND 2 →
               </NeonButton>

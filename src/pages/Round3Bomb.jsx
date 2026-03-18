@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import GlitchText from "../components/GlitchText";
 import NeonButton from "../components/NeonButton";
+import CyberBackground from "../components/CyberBackground";
+import { Lock } from "lucide-react";
 
 const Round3Bomb = () => {
   const { id } = useParams();
@@ -75,28 +77,47 @@ const Round3Bomb = () => {
 
     if (previousIncomplete) {
       return (
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 text-red-400">
-          <GlitchText
-            text={`BOMB ${bombId} LOCKED`}
-            className="text-red-500 text-2xl"
-          />
+        <div className="h-screen w-full flex flex-col items-center justify-center gap-8 relative overflow-hidden bg-black p-6">
+          <CyberBackground />
+          
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="text-center z-10"
+          >
+            <GlitchText
+              text={`BOMB ${bombId} LOCKED`}
+              className="text-red-500 drop-shadow-[0_0_15px_rgba(255,0,0,0.5)]"
+            />
+            <div className="mt-4 text-red-500/60 font-mono text-sm tracking-[0.3em] uppercase">
+              ACCESS DENIED // SECURITY PROTOCOL ACTIVE
+            </div>
+          </motion.div>
 
-          <div className="text-cyan-300 font-mono text-center">
-            Diffuse Bomb {bombId - 1} first
+          <div className="text-cyan-300 font-mono text-center max-w-md z-10 bg-black/40 p-4 border border-cyan-500/20 backdrop-blur-sm">
+            Multiple integrity breaches detected. 
+            <br />
+            You must diffuse <span className="text-white font-bold underline decoration-red-500/50 uppercase tracking-widest px-1">Bomb {bombId - 1}</span> before attempting to access this core.
           </div>
 
           <motion.div
-            animate={{ opacity: [1, 0.5, 1] }}
-            transition={{ repeat: Infinity, duration: 1 }}
-            className="w-40 h-40 rounded-full border-4 border-red-500 shadow-[0_0_50px_rgba(255,0,0,0.6)] flex items-center justify-center text-5xl"
+            animate={{ 
+              scale: [1, 1.05, 1],
+              rotate: [0, 5, -5, 0]
+            }}
+            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+            className="relative w-48 h-48 rounded-full border-4 border-red-600 shadow-[0_0_60px_rgba(220,38,38,0.3)] flex items-center justify-center z-10"
           >
-            🔒
+            <div className="absolute inset-4 rounded-full border-2 border-red-500/20 animate-pulse" />
+            <div className="absolute inset-0 bg-red-600/5 rounded-full" />
+            <Lock size={64} className="text-red-500 drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]" />
           </motion.div>
 
           <NeonButton
-            onClick={() => navigate(`/round3/${bombId - 1}`)}
+            onClick={() => navigate(`/round3/bomb/${bombId - 1}`)}
+            className="z-10 px-10 py-4 font-orbitron"
           >
-            GO TO BOMB {bombId - 1}
+            ACCESS BOMB {bombId - 1}
           </NeonButton>
         </div>
       );
@@ -109,12 +130,41 @@ const Round3Bomb = () => {
   // ---------------- DIFFUSED ----------------
   if (!current) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 text-green-400">
-        <h2 className="text-2xl font-orbitron">
-          ✔ BOMB {id} DIFFUSED
-        </h2>
+      <div className="h-screen w-full flex flex-col items-center justify-center gap-8 relative overflow-hidden bg-black p-6">
+        <CyberBackground />
+        
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-center z-10"
+        >
+          <div className="text-neon-green text-6xl mb-4 flex justify-center">
+            <motion.div
+              animate={{ rotateY: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              ✔
+            </motion.div>
+          </div>
+          <GlitchText
+            text={`BOMB ${id} DIFFUSED`}
+            className="text-neon-green drop-shadow-[0_0_15px_rgba(57,255,20,0.5)]"
+          />
+          <div className="mt-4 text-neon-green/60 font-mono text-sm tracking-[0.3em] uppercase">
+            Threat neutralized // Sector Secured
+          </div>
+        </motion.div>
 
-        <NeonButton onClick={() => navigate("/round3")}>
+        <div className="text-cyan-300 font-mono text-center max-w-md z-10 bg-black/40 p-4 border border-neon-green/20 backdrop-blur-sm">
+          Core stability restored. 
+          <br />
+          System logs updated. Proceed to the next objective.
+        </div>
+
+        <NeonButton 
+          onClick={() => navigate("/round3")}
+          className="z-10 px-10 py-4 font-orbitron shadow-[0_0_20px_rgba(57,255,20,0.2)]"
+        >
           RETURN TO HUB
         </NeonButton>
       </div>
@@ -172,34 +222,42 @@ const Round3Bomb = () => {
 
   // ---------------- UI ----------------
   return (
-    <div className="flex-1 p-12 flex flex-col items-center gap-10 text-white">
-
+    <div className="h-screen w-full p-4 md:p-8 flex flex-col items-center justify-center gap-4 md:gap-6 text-white overflow-hidden relative">
       <GlitchText
         text={`BOMB ${id} — CORE DIFFUSION`}
-        className="text-red-500 text-xl"
+        className="text-red-500 text-3xl md:text-5xl font-bold tracking-tighter"
       />
 
       {/* CORE */}
       <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-        className="relative w-56 h-56 rounded-full border-4 border-red-500 shadow-[0_0_60px_rgba(255,0,0,0.7)]"
+        animate={{ 
+          rotate: 360,
+          scale: [1, 1.05, 1]
+        }}
+        transition={{ 
+          rotate: { repeat: Infinity, duration: 20, ease: "linear" },
+          scale: { repeat: Infinity, duration: 2, ease: "easeInOut" }
+        }}
+        className="relative w-40 h-40 md:w-56 md:h-56 rounded-full border-4 border-red-500 shadow-[0_0_60px_rgba(255,0,0,0.7)] flex items-center justify-center"
       >
-        <div className="absolute inset-6 rounded-full border border-red-500/40" />
-        <div className="absolute inset-12 rounded-full bg-red-500/10" />
+        <div className="absolute inset-4 rounded-full border-2 border-red-500/40 animate-pulse" />
+        <div className="absolute inset-8 rounded-full border border-red-500/20" />
+        <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-red-600 to-red-900 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)]" />
       </motion.div>
 
       {/* QUESTION */}
-      <div className="max-w-3xl text-center font-mono text-cyan-300">
-        Q{current.questionNumber} / {bomb.questions.length}
+      <div className="max-w-4xl w-full text-center space-y-2">
+        <div className="text-neon-cyan font-mono text-sm tracking-[0.3em] uppercase">
+          Sequence: {current.questionNumber} / {bomb.questions.length}
+        </div>
 
-        <div className="mt-4 text-white whitespace-pre-line">
+        <div className="text-white font-mono text-sm md:text-base leading-relaxed px-4 py-2 border border-white/10 bg-white/5 rounded backdrop-blur-sm min-h-[4rem] flex items-center justify-center">
           {questionLine}
         </div>
       </div>
 
       {/* OPTIONS */}
-      <div className="grid grid-cols-2 gap-4 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 w-full max-w-4xl px-4">
         {options.map((opt, i) => {
           const letter = letters[i];
 
@@ -207,31 +265,41 @@ const Round3Bomb = () => {
             <button
               key={i}
               onClick={() => setSelected(letter)}
-              className={`px-6 py-3 border font-mono transition-all
+              className={`px-4 py-3 md:px-6 md:py-4 border font-mono transition-all duration-300 rounded relative overflow-hidden group
                 ${
                   selected === letter
-                    ? "border-green-400 bg-green-400/10 text-green-300"
-                    : "border-cyan-500 text-cyan-300 hover:bg-cyan-500/10"
+                    ? "border-neon-green bg-neon-green/20 text-neon-green shadow-[0_0_20px_rgba(57,255,20,0.2)]"
+                    : "border-neon-cyan/40 text-neon-cyan/70 hover:border-neon-cyan hover:bg-neon-cyan/10 hover:text-neon-cyan"
                 }`}
             >
-              <span className="mr-2">{letter}.</span>
-              {opt}
+              <div className="flex items-center gap-4 relative z-10">
+                <span className={`w-8 h-8 rounded border flex items-center justify-center text-xs font-bold
+                  ${selected === letter ? "border-neon-green bg-neon-green text-black" : "border-current"}`}>
+                  {letter}
+                </span>
+                <span className="text-xs md:text-sm">{opt}</span>
+              </div>
             </button>
           );
         })}
       </div>
 
-      {/* SUBMIT */}
-      <NeonButton
-        onClick={submitAnswer}
-        disabled={!selected || submitting}
-      >
-        {submitting ? "VERIFYING…" : "SUBMIT"}
-      </NeonButton>
+      {/* SUBMIT & STATUS */}
+      <div className="flex flex-col items-center gap-4 w-full">
+        <NeonButton
+          onClick={submitAnswer}
+          disabled={!selected || submitting}
+          className="w-full max-w-xs py-4"
+        >
+          {submitting ? "VERIFYING DATA..." : "INITIATE DIFFUSION"}
+        </NeonButton>
 
-      {/* STATUS */}
-      <div className="text-red-400 font-mono text-sm">
-        Mistakes: {bomb.mistakes}
+        <div className="flex items-center gap-4 text-[10px] font-mono tracking-widest uppercase">
+          <span className="text-red-500/60">Integrity Breach:</span>
+          <span className="text-red-500 font-bold px-2 py-0.5 border border-red-500/20 bg-red-500/10 rounded">
+            {bomb.mistakes} MISTAKES
+          </span>
+        </div>
       </div>
     </div>
   );
