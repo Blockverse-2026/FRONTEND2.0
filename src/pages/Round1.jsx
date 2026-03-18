@@ -10,6 +10,7 @@ import CyberBackground from "../components/CyberBackground";
 import { useGame } from "../context/GameContext";
 
 const TOTAL_NODES = 50;
+const ROUND_TIME = 300; // Testing: 5 minutes (300s). For 30 mins, use 1800.
 
 const Round1 = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const Round1 = () => {
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
   const [comboMultiplier, setComboMultiplier] = useState(1);
-  const [timeLeft, setTimeLeft] = useState(300);
+  const [timeLeft, setTimeLeft] = useState(ROUND_TIME);
   const [questionOrder, setQuestionOrder] = useState([]);
 
   useEffect(() => {
@@ -119,7 +120,8 @@ const Round1 = () => {
         if (!res.ok) throw new Error("Failed to init round");
 
         setQuestions(json.data.questions);
-        setTimeLeft(Math.floor(json.data.timeRemainingMs / 1000));
+        // setTimeLeft(Math.floor(json.data.timeRemainingMs / 1000));
+        setTimeLeft(ROUND_TIME);
       } catch (err) {
         setError(err.message);
       }
