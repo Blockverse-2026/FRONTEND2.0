@@ -508,16 +508,31 @@ const Round1 = () => {
       >
         <div className="space-y-6 text-center">
           <div className="p-6 border border-neon-green/30 bg-neon-green/10 font-mono text-neon-green">
-            <h3 className="text-2xl font-bold mb-4 animate-pulse">EARLY FINISHER DETECTED</h3>
+            <h3 className="text-2xl font-bold mb-4 animate-pulse uppercase tracking-tighter">
+              Early Finisher Detected
+            </h3>
             <p className="mb-4">All nodes have been successfully decrypted.</p>
-            <p className="text-sm opacity-80 uppercase tracking-widest mb-6">
-              Firewall bypassed ahead of schedule. Access to next sector is now available.
-            </p>
+            <div className="py-4 mb-4 border-y border-neon-green/20">
+              <p className="text-xs opacity-80 uppercase tracking-widest mb-2">
+                Security clearance pending...
+              </p>
+              <p className="text-3xl font-bold text-white tracking-widest">
+                {minutes}:{seconds}
+              </p>
+              <p className="text-[10px] opacity-60 mt-2 uppercase">
+                Wait for the round timer to expire to proceed to the next sector.
+              </p>
+            </div>
             <NeonButton 
-              className="w-full py-4 font-orbitron shadow-[0_0_30px_rgba(0,246,255,0.3)]"
-              onClick={() => navigate("/dashboard")}
+              className={`w-full py-4 font-orbitron transition-all duration-500 ${
+                timeLeft > 0 
+                  ? "opacity-50 grayscale cursor-not-allowed shadow-none" 
+                  : "shadow-[0_0_30px_rgba(0,246,255,0.3)] opacity-100"
+              }`}
+              onClick={() => timeLeft <= 0 && navigate("/dashboard")}
+              disabled={timeLeft > 0}
             >
-              RETURN TO DASHBOARD &gt;&gt;
+              {timeLeft > 0 ? "LOCKING INTERFACE..." : "RETURN TO DASHBOARD >>"}
             </NeonButton>
           </div>
         </div>
