@@ -1,19 +1,22 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import GlitchText from "../components/GlitchText";
 import NeonButton from "../components/NeonButton";
 import CyberBackground from "../components/CyberBackground";
-import { Lock } from "lucide-react";
+import { Lock, HelpCircle } from "lucide-react";
+import { useGame } from "../context/GameContext";
 
 const Round3Bomb = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { gameState } = useGame();
 
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showClues, setShowClues] = useState(false);
 
   // ---------------- INIT ----------------
   const initRound = () => {
@@ -228,6 +231,42 @@ const Round3Bomb = () => {
         className="text-red-500 text-3xl md:text-5xl font-bold tracking-tighter"
       />
 
+      {/* CLUES PANEL */}
+      <div 
+        className="absolute bottom-24 right-6 z-50"
+        onMouseEnter={() => setShowClues(true)}
+        onMouseLeave={() => setShowClues(false)}
+      >
+        <div className="flex items-center gap-3 text-cyan-400/80 hover:text-cyan-400 transition-colors cursor-pointer bg-black/50 p-3 rounded-lg border-2 border-cyan-400/30 hover:border-cyan-400/60 shadow-[0_0_20px_rgba(0,246,255,0.1)] hover:shadow-[0_0_30px_rgba(0,246,255,0.2)]">
+          <HelpCircle size={20} />
+          <span className="text-sm font-orbitron font-bold tracking-widest uppercase">VIEW CLUES</span>
+        </div>
+
+        <AnimatePresence>
+          {showClues && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="absolute bottom-full mb-3 right-0 w-96 bg-black/90 border-2 border-neon-cyan/30 rounded-lg p-5 shadow-lg backdrop-blur-xl z-50"
+            >
+              <h3 className="font-orbitron text-neon-cyan text-lg border-b-2 border-neon-cyan/20 pb-3 mb-4">ACQUIRED INTEL</h3>
+              {gameState.fragments.length > 0 ? (
+                <ul className="space-y-4 text-sm font-mono text-white/80">
+                  {gameState.fragments.map((fragment, i) => (
+                    <li key={i} className="border-l-4 border-neon-cyan/40 pl-4 leading-relaxed">
+                      {fragment.data}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm font-mono text-white/50 italic">No data fragments acquired from the Black Market.</p>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* CORE */}
       <motion.div
         animate={{ 
@@ -286,21 +325,21 @@ const Round3Bomb = () => {
 
       {/* SUBMIT & STATUS */}
       <div className="flex flex-col items-center gap-4 w-full">
-        <NeonButton
-          onClick={submitAnswer}
-          disabled={!selected || submitting}
-          className="w-full max-w-xs py-4"
-        >
-          {submitting ? "VERIFYING DATA..." : "INITIATE DIFFUSION"}
-        </NeonButton>
+          <NeonButton
+            onClick={submitAnswer}
+            disabled={!selected || submitting}
+            className="w-full max-w-xs py-4"
+          >
+            {submitting ? "VERIFYING DATA..." : "INITIATE DIFFUSION"}
+          </NeonButton>
 
-        <div className="flex items-center gap-4 text-[10px] font-mono tracking-widest uppercase">
-          <span className="text-red-500/60">Integrity Breach:</span>
-          <span className="text-red-500 font-bold px-2 py-0.5 border border-red-500/20 bg-red-500/10 rounded">
-            {bomb.mistakes} MISTAKES
-          </span>
+          <div className="flex items-center gap-4 text-[10px] font-mono tracking-widest uppercase">
+            <span className="text-red-500/60">Integrity Breach:</span>
+            <span className="text-red-500 font-bold px-2 py-0.5 border border-red-500/20 bg-red-500/10 rounded">
+              {bomb.mistakes} MISTAKES
+            </span>
+          </div>
         </div>
-      </div>
     </div>
   );
 };
