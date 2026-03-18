@@ -5,6 +5,7 @@ const TerminalCard = ({
   title,
   children,
   className,
+  bodyClassName,
   headerColor = 'cyan',
   ...props
 }) => {
@@ -29,7 +30,7 @@ const TerminalCard = ({
         </span>
       </div>
 
-      <div className="p-6">
+      <div className={twMerge("p-6", bodyClassName)}>
         {children}
       </div>
     </div>

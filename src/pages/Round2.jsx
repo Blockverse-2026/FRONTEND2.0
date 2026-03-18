@@ -185,43 +185,46 @@ const Round2 = () => {
   if (!activeQuestion) return <div className="p-6 text-white">Loading...</div>;
 
   return (
-    <div className="flex-1 min-h-screen relative p-6 md:p-12 overflow-hidden flex items-center justify-center bg-black">
+    <div className="flex-1 min-h-screen relative p-4 md:p-6 overflow-hidden flex items-center justify-center bg-black">
       <CyberBackground />
       
       {/* ATMOSPHERIC GLOWS */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-neon-cyan/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-neon-gold/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+      <GlitchText text="Round 2: Rapid Fire" as="h1" size="large" className="absolute top-8 text-center" />
+
+      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-4 relative z-10 transform scale-[1.15] mt-24">
 
         {/* QUESTION AREA - Take 8 cols on large screens */}
         <motion.div
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-8 flex flex-col gap-4"
+          className="lg:col-span-8 flex flex-col gap-3"
         >
           <TerminalCard
             title={`ENCRYPTION NODE: ${current + 1}`}
             headerColor="cyan"
-            className="h-full border-neon-cyan/40 shadow-[0_0_30px_rgba(0,246,255,0.05)] bg-black/40 backdrop-blur-md"
+            className="border-neon-cyan/40 shadow-[0_0_30px_rgba(0,246,255,0.05)] bg-black/40 backdrop-blur-md"
+            bodyClassName="p-4"
           >
-            <div className="space-y-4 py-2">
+            <div className="space-y-3">
 
               <div className="relative group">
                 <div className="absolute -left-4 top-0 bottom-0 w-1 bg-neon-cyan/30 rounded-full group-hover:bg-neon-cyan transition-colors" />
-                <p className="text-white font-orbitron text-base md:text-xl leading-relaxed tracking-tight pl-4 drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                <p className="text-white font-orbitron text-sm md:text-lg leading-relaxed tracking-tight pl-4 drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
                   {activeQuestion?.questionText}
                 </p>
               </div>
 
               {/* TIMER BAR */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center text-[10px] font-mono text-neon-cyan/60 uppercase tracking-widest px-1">
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-[9px] font-mono text-neon-cyan/60 uppercase tracking-widest px-1">
                   <span>Data Link Stability</span>
                   <span>{Math.round((questionTime / QUESTION_TIME) * 100)}%</span>
                 </div>
-                <div className="relative h-2.5 bg-black/60 border border-neon-cyan/20 rounded-full overflow-hidden">
+                <div className="relative h-2 bg-black/60 border border-neon-cyan/20 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: "100%" }}
                     animate={{ 
@@ -235,28 +238,28 @@ const Round2 = () => {
               </div>
 
               {/* OPTIONS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {activeQuestion?.options?.map((opt, idx) => (
                   <motion.button
                     key={idx}
-                    whileHover={{ scale: 1.02, x: 4 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01, x: 2 }}
+                    whileTap={{ scale: 0.99 }}
                     onClick={() => setSelectedIndex(idx)}
-                    className={`p-4 border text-left font-mono transition-all duration-300 rounded relative overflow-hidden group
+                    className={`p-3 border text-left font-mono transition-all duration-300 rounded relative overflow-hidden group
                     ${
                       selectedIndex === idx
-                        ? "border-neon-green bg-neon-green/10 text-white shadow-[0_0_25px_rgba(57,255,20,0.2)]"
+                        ? "border-neon-green bg-neon-green/10 text-white shadow-[0_0_20px_rgba(57,255,20,0.15)]"
                         : "border-white/10 hover:border-neon-cyan/60 bg-white/5 text-white/70 hover:text-white"
                     }`}
                   >
                     <div className="flex items-center gap-3 relative z-10">
-                      <span className={`w-7 h-7 rounded border flex items-center justify-center text-sm font-bold transition-colors
+                      <span className={`w-6 h-6 rounded border flex items-center justify-center text-xs font-bold transition-colors
                         ${selectedIndex === idx 
                           ? "border-neon-green bg-neon-green text-black" 
                           : "border-white/20 group-hover:border-neon-cyan/60 text-white/40 group-hover:text-neon-cyan"}`}>
                         {String.fromCharCode(65 + idx)}
                       </span>
-                      <span className="text-sm leading-tight">{opt}</span>
+                      <span className="text-xs leading-tight">{opt}</span>
                     </div>
                     
                     {/* HOVER GLOW EFFECT */}
@@ -265,12 +268,12 @@ const Round2 = () => {
                 ))}
               </div>
 
-              <div className="relative mt-2">
+              <div className="relative mt-1">
                 <NeonButton
                   onClick={submitAnswer}
                   disabled={selectedIndex === null || submitting || !!answerStatus}
-                  className={`w-full py-4 text-lg font-orbitron tracking-[0.3em] shadow-[0_0_30px_rgba(0,246,255,0.15)] transition-all duration-500 ${
-                    answerStatus ? "opacity-0 invisible pointer-events-none" : "opacity-100 visible hover:shadow-[0_0_40px_rgba(0,246,255,0.25)]"
+                  className={`w-full py-3 text-base font-orbitron tracking-[0.2em] shadow-[0_0_20px_rgba(0,246,255,0.1)] transition-all duration-500 ${
+                    answerStatus ? "opacity-0 invisible pointer-events-none" : "opacity-100 visible hover:shadow-[0_0_30px_rgba(0,246,255,0.2)]"
                   }`}
                 >
                   <span className={answerStatus ? "invisible" : "visible"}>
@@ -281,14 +284,14 @@ const Round2 = () => {
                 <AnimatePresence>
                   {answerStatus && (
                     <motion.div
-                      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                      initial={{ opacity: 0, scale: 0.95, y: 5 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                      className={`absolute inset-0 flex items-center justify-center text-center font-orbitron text-sm md:text-xl tracking-[0.4em] px-4 rounded border-2 z-20 backdrop-blur-md
+                      exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                      className={`absolute inset-0 flex items-center justify-center text-center font-orbitron text-xs md:text-lg tracking-[0.3em] px-4 rounded border z-20 backdrop-blur-md
                         ${
                           answerStatus === "correct"
-                            ? "text-neon-green border-neon-green/40 bg-neon-green/10 shadow-[0_0_40px_rgba(57,255,20,0.3)]"
-                            : "text-red-500 border-red-500/40 bg-red-500/10 shadow-[0_0_40px_rgba(255,0,0,0.3)]"
+                            ? "text-neon-green border-neon-green/40 bg-neon-green/10 shadow-[0_0_30px_rgba(57,255,20,0.25)]"
+                            : "text-red-500 border-red-500/40 bg-red-500/10 shadow-[0_0_30px_rgba(255,0,0,0.25)]"
                         }`}
                     >
                       <motion.span
@@ -296,8 +299,8 @@ const Round2 = () => {
                         transition={{ duration: 1.5, repeat: Infinity }}
                       >
                         {answerStatus === "correct"
-                          ? "✔ ACCESS GRANTED // TOKEN RECOVERED"
-                          : "✖ ACCESS DENIED // SYSTEM RESETTING..."}
+                          ? "✔ ACCESS GRANTED"
+                          : "✖ ACCESS DENIED"}
                       </motion.span>
                     </motion.div>
                   )}
@@ -305,24 +308,19 @@ const Round2 = () => {
               </div>
 
               {/* SYSTEM LOG PANEL */}
-              <div className="mt-4 border-t border-white/5 pt-4">
-                <div className="flex items-center justify-between mb-3 px-2">
+              <div className="mt-2 border-t border-white/5 pt-2">
+                <div className="flex items-center justify-between mb-2 px-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-neon-cyan shadow-[0_0_5px_#00f6ff]" />
-                    <span className="text-neon-cyan/60 text-[10px] tracking-[0.3em] uppercase font-mono">
+                    <div className="w-1 h-1 rounded-full bg-neon-cyan shadow-[0_0_5px_#00f6ff]" />
+                    <span className="text-neon-cyan/60 text-[8px] tracking-[0.2em] uppercase font-mono">
                       Kernel Log Stream
                     </span>
                   </div>
-                  <div className="flex gap-1.5">
-                    <div className="w-1 h-1 rounded-full bg-neon-green/40 animate-pulse" />
-                    <div className="w-1 h-1 rounded-full bg-neon-cyan/20" />
-                    <div className="w-1 h-1 rounded-full bg-neon-cyan/20" />
-                  </div>
                 </div>
                 
-                <div className="bg-black/60 rounded border border-white/5 p-4 font-mono text-[10px] leading-relaxed overflow-hidden h-24 relative group">
+                <div className="bg-black/60 rounded border border-white/5 p-3 font-mono text-[9px] leading-relaxed overflow-hidden h-16 relative group">
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 pointer-events-none" />
-                  <div className="space-y-1 opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className="space-y-0.5 opacity-60 group-hover:opacity-100 transition-opacity duration-500">
                     <motion.div
                       initial={{ x: -5, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
@@ -347,14 +345,6 @@ const Round2 = () => {
                     >
                       <span className="text-white/20">[09:24:18]</span> DECRYPTING_NODE_{current + 1}... <span className="animate-pulse">IN_PROGRESS</span>
                     </motion.div>
-                    <motion.div
-                      initial={{ x: -5, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ repeat: Infinity, duration: 6, delay: 2, repeatDelay: 3 }}
-                      className="text-white/30 italic"
-                    >
-                      <span className="text-white/10">[09:24:22]</span> ANALYZING_TEAM_HEURISTICS_DATA_STREAM...
-                    </motion.div>
                   </div>
                   
                   {/* SCANLINE EFFECT */}
@@ -365,7 +355,7 @@ const Round2 = () => {
             </div>
           </TerminalCard>
 
-          <div className="flex justify-between items-center px-4 mt-2 font-mono text-white/20 uppercase text-[9px] tracking-[0.5em]">
+          <div className="flex justify-between items-center px-4 mt-1 font-mono text-white/20 uppercase text-[8px] tracking-[0.4em]">
             <span>Hardware: GEN-4 Neural Interface</span>
             <span className="animate-pulse text-neon-green/40">Link: Optimized</span>
           </div>
@@ -376,28 +366,29 @@ const Round2 = () => {
           initial={{ x: 20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="lg:col-span-4 flex flex-col gap-6"
+          className="lg:col-span-4 flex flex-col gap-4"
         >
           <TerminalCard
             title="SYSTEM STATUS"
             headerColor="gold"
             className="backdrop-blur-xl bg-black/60 border-neon-gold/30 shadow-[0_0_30px_rgba(255,170,0,0.05)]"
+            bodyClassName="p-4"
           >
-            <div className="space-y-8 font-mono">
+            <div className="space-y-4 font-mono">
 
-              <div className="space-y-3">
-                <div className="text-neon-gold/40 text-[9px] tracking-[0.4em] uppercase font-bold">Active Protocol</div>
-                <div className="flex items-center gap-4 bg-neon-gold/5 p-3 border border-neon-gold/10 rounded-sm">
-                  <div className="w-2.5 h-2.5 rounded-full bg-neon-gold animate-pulse shadow-[0_0_15px_#ffaa00]" />
-                  <GlitchText text="RAPID FIRE" as="span" size="small" className="text-neon-gold font-bold tracking-widest" />
+              <div className="space-y-2">
+                <div className="text-neon-gold/40 text-[8px] tracking-[0.3em] uppercase font-bold">Active Protocol</div>
+                <div className="flex items-center gap-3 bg-neon-gold/5 p-2 border border-neon-gold/10 rounded-sm">
+                  <div className="w-2 h-2 rounded-full bg-neon-gold animate-pulse shadow-[0_0_15px_#ffaa00]" />
+                  <GlitchText text="RAPID FIRE" as="span" size="small" className="text-neon-gold font-bold text-xs tracking-widest" />
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="text-neon-gold/40 text-[9px] tracking-[0.4em] uppercase font-bold">Sequence Progression</div>
-                <div className="flex items-end gap-2 text-3xl text-white font-orbitron">
+              <div className="space-y-2">
+                <div className="text-neon-gold/40 text-[8px] tracking-[0.3em] uppercase font-bold">Sequence Progression</div>
+                <div className="flex items-end gap-2 text-2xl text-white font-orbitron">
                   <span className="text-neon-gold">{current + 1}</span>
-                  <span className="text-white/20 text-lg mb-1">/ {questions.length}</span>
+                  <span className="text-white/20 text-base mb-0.5">/ {questions.length}</span>
                 </div>
                 <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
                   <motion.div 
@@ -407,27 +398,27 @@ const Round2 = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6 py-6 border-y border-white/5">
-                <div className="space-y-2">
-                  <div className="text-neon-gold/40 text-[9px] tracking-[0.3em] uppercase font-bold text-center">Tokens</div>
-                  <div className="text-3xl text-neon-green font-orbitron text-center drop-shadow-[0_0_10px_rgba(57,255,20,0.3)]">{tokens}</div>
+              <div className="grid grid-cols-2 gap-4 py-3 border-y border-white/5">
+                <div className="space-y-1">
+                  <div className="text-neon-gold/40 text-[8px] tracking-[0.2em] uppercase font-bold text-center">Tokens</div>
+                  <div className="text-2xl text-neon-green font-orbitron text-center drop-shadow-[0_0_10px_rgba(57,255,20,0.3)]">{tokens}</div>
                 </div>
-                <div className="space-y-2">
-                  <div className="text-neon-gold/40 text-[9px] tracking-[0.3em] uppercase font-bold text-center">Multiplier</div>
-                  <div className="text-3xl text-neon-gold font-orbitron text-center drop-shadow-[0_0_10px_rgba(255,170,0,0.3)]">x{comboMultiplier.toFixed(1)}</div>
+                <div className="space-y-1">
+                  <div className="text-neon-gold/40 text-[8px] tracking-[0.2em] uppercase font-bold text-center">Multiplier</div>
+                  <div className="text-2xl text-neon-gold font-orbitron text-center drop-shadow-[0_0_10px_rgba(255,170,0,0.3)]">x{comboMultiplier.toFixed(1)}</div>
                 </div>
               </div>
 
-              <div className="p-5 bg-neon-gold/5 border border-neon-gold/10 rounded-sm space-y-4">
+              <div className="p-3 bg-neon-gold/5 border border-neon-gold/10 rounded-sm space-y-3">
                 <div className="flex justify-between items-center">
-                  <div className="text-neon-gold/60 text-[10px] tracking-[0.2em] uppercase font-bold">Streak Bonus</div>
-                  <span className="text-neon-gold text-xs font-bold tracking-widest">{streak}/5</span>
+                  <div className="text-neon-gold/60 text-[9px] tracking-[0.1em] uppercase font-bold">Streak Bonus</div>
+                  <span className="text-neon-gold text-[10px] font-bold tracking-widest">{streak}/5</span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1.5">
                   {[...Array(5)].map((_, i) => (
                     <div
                       key={i}
-                      className="h-2 flex-1 rounded-sm relative overflow-hidden bg-white/5"
+                      className="h-1.5 flex-1 rounded-sm relative overflow-hidden bg-white/5"
                     >
                       <motion.div
                         initial={{ width: 0 }}
@@ -440,20 +431,20 @@ const Round2 = () => {
               </div>
 
               <NeonButton
-                className={`mt-4 w-full py-5 font-orbitron tracking-widest transition-all duration-500
+                className={`mt-2 w-full py-3 font-orbitron text-sm tracking-widest transition-all duration-500
                   ${isRoundComplete
-                    ? "shadow-[0_0_40px_rgba(255,170,0,0.25)] opacity-100 scale-100"
+                    ? "shadow-[0_0_30px_rgba(255,170,0,0.2)] opacity-100 scale-100"
                     : "opacity-30 grayscale pointer-events-none scale-95"}`}
                 onClick={() => navigate("/round2/phase2")}
               >
-                PROCEED TO MARKETPLACE →
+                PROCEED →
               </NeonButton>
 
             </div>
           </TerminalCard>
 
-          <div className="p-5 border border-neon-cyan/10 bg-neon-cyan/5 rounded backdrop-blur-sm text-[10px] font-mono text-neon-cyan/40 uppercase tracking-[0.2em] leading-relaxed">
-            <span className="text-neon-cyan/60 font-bold">[!] ADVISORY:</span> Complete the sequence to unlock Phase 2. High streaks maximize token yield for the marketplace.
+          <div className="p-3 border border-neon-cyan/10 bg-neon-cyan/5 rounded backdrop-blur-sm text-[9px] font-mono text-neon-cyan/40 uppercase tracking-[0.1em] leading-relaxed">
+            <span className="text-neon-cyan/60 font-bold">[!] ADVISORY:</span> Complete the sequence to unlock Phase 2. High streaks maximize token yield.
           </div>
         </motion.div>
 
