@@ -4,8 +4,6 @@ import { motion } from "framer-motion";
 import GlitchText from "../components/GlitchText";
 import NeonButton from "../components/NeonButton";
 
-// const API = "https://blockverse-backend.onrender.com";
-
 const Round3Bomb = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -63,6 +61,49 @@ const Round3Bomb = () => {
     );
   }
 
+  // ---------------- LOCK LOGIC ----------------
+  const bombId = Number(id);
+
+  if (bombId > 1) {
+    const previousBomb = data.bombs.find(
+      (b) => b.bombNumber === bombId - 1
+    );
+
+    const previousIncomplete = previousBomb?.questions.some(
+      (q) => !q.solved
+    );
+
+    if (previousIncomplete) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 text-red-400">
+          <GlitchText
+            text={`BOMB ${bombId} LOCKED`}
+            className="text-red-500 text-2xl"
+          />
+
+          <div className="text-cyan-300 font-mono text-center">
+            Diffuse Bomb {bombId - 1} first
+          </div>
+
+          <motion.div
+            animate={{ opacity: [1, 0.5, 1] }}
+            transition={{ repeat: Infinity, duration: 1 }}
+            className="w-40 h-40 rounded-full border-4 border-red-500 shadow-[0_0_50px_rgba(255,0,0,0.6)] flex items-center justify-center text-5xl"
+          >
+            🔒
+          </motion.div>
+
+          <NeonButton
+            onClick={() => navigate(`/round3/${bombId - 1}`)}
+          >
+            GO TO BOMB {bombId - 1}
+          </NeonButton>
+        </div>
+      );
+    }
+  }
+
+  // ---------------- CURRENT QUESTION ----------------
   const current = bomb.questions.find((q) => !q.solved);
 
   // ---------------- DIFFUSED ----------------
@@ -80,33 +121,23 @@ const Round3Bomb = () => {
     );
   }
 
-  // ---------------- PARSE QUESTION ----------------
-
+  // ---------------- PARSE OPTIONS ----------------
   const letters = ["A", "B", "C", "D"];
 
-  // Extract MCQ options from text
   const optionRegex = /[A-D]\.\s*(.*)/g;
-  const matches = [
-    ...current.questionText.matchAll(optionRegex),
-  ];
+  const matches = [...current.questionText.matchAll(optionRegex)];
 
-  // Final options
   const options =
     matches.length === 4
       ? matches.map((m) => m[1])
-      : current.options && current.options.length === 4
+      : current.options?.length === 4
       ? current.options
-      : [
-          "Option A",
-          "Option B",
-          "Option C",
-          "Option D",
-        ];
+      : ["Option A", "Option B", "Option C", "Option D"];
 
-  // Extract clean question line
-  const questionLine = current.questionText
-    .split("\n")
-    .find((l) => l.toLowerCase().includes("q")) ||
+  const questionLine =
+    current.questionText
+      .split("\n")
+      .find((l) => l.toLowerCase().includes("q")) ||
     current.questionText;
 
   // ---------------- SUBMIT ----------------
@@ -123,7 +154,7 @@ const Round3Bomb = () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        bombNumber: Number(id),
+        bombNumber: bombId,
         questionNumber: current.questionNumber,
         answer: selected,
       }),
@@ -148,7 +179,7 @@ const Round3Bomb = () => {
         className="text-red-500 text-xl"
       />
 
-      {/* CORE ANIMATION */}
+      {/* CORE */}
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
