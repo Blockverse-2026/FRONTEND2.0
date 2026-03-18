@@ -364,10 +364,9 @@ const Dashboard = () => {
   <NeonButton
     className={`w-full flex items-center justify-between group ${
       isRound2Locked
-        ? "cursor-not-allowed filter grayscale contrast-50 opacity-60"
+        ? "cursor-not-allowed opacity-60"
         : ""
     }`}
-    variant="secondary"
     onClick={() => !isRound2Locked && navigate("/panel/round2-intro")}
   >
     <div className="flex flex-col items-start">
@@ -393,10 +392,9 @@ const Dashboard = () => {
   <NeonButton
     className={`w-full flex items-center justify-between group ${
       isRound3Locked
-        ? "cursor-not-allowed filter grayscale contrast-50 opacity-60"
+        ? "cursor-not-allowed opacity-60"
         : ""
     }`}
-    variant="danger"
     onClick={() => !isRound3Locked && navigate("/panel/round3-intro")}
   >
     <div className="flex flex-col items-start">
