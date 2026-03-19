@@ -339,6 +339,7 @@ const Dashboard = () => {
           >
            <Motion.div variants={itemVariants}>
   <NeonButton
+    variant="primary"
     className={`w-full flex items-center justify-between group ${
       isRound1Locked
         ? "cursor-not-allowed filter grayscale contrast-50 opacity-60"
@@ -346,8 +347,11 @@ const Dashboard = () => {
     }`}
     onClick={() => !isRound1Locked && navigate("/panel/round1-intro")}
   >
-    <div className="flex flex-col items-start">
-      <span>ROUND 1: FIREWALL</span>
+    <div className="flex flex-col items-start min-h-[3.2rem] justify-center w-full">
+      <div className="flex items-center justify-between w-full">
+        <span>ROUND 1: FIREWALL</span>
+        <Shield className="group-hover:text-white transition-colors" size={20} />
+      </div>
       {isRound1Locked && <Lock size={16} className="mt-1" />}
       {isRound1Complete && (
         <div className="flex items-center gap-1 text-neon-green text-xs mt-1">
@@ -355,13 +359,19 @@ const Dashboard = () => {
           <span>COMPLETED</span>
         </div>
       )}
+      {!isRound1Locked && !isRound1Complete && (
+        <div className="flex items-center gap-1 text-neon-cyan text-xs mt-1 animate-pulse">
+          <Activity size={12} />
+          <span>SYSTEM_READY</span>
+        </div>
+      )}
     </div>
-    <Shield className="group-hover:text-white transition-colors" size={20} />
   </NeonButton>
 </Motion.div>
 
 <Motion.div variants={itemVariants}>
   <NeonButton
+    variant="blue"
     className={`w-full flex items-center justify-between group ${
       isRound2Locked
         ? "cursor-not-allowed opacity-60"
@@ -369,8 +379,14 @@ const Dashboard = () => {
     }`}
     onClick={() => !isRound2Locked && navigate("/panel/round2-intro")}
   >
-    <div className="flex flex-col items-start">
-      <span>ROUND 2: MARKETPLACE</span>
+    <div className="flex flex-col items-start min-h-[3.2rem] justify-center w-full">
+      <div className="flex items-center justify-between w-full">
+        <span>ROUND 2: MARKETPLACE</span>
+        <ShoppingBag
+          className="group-hover:text-white transition-colors"
+          size={20}
+        />
+      </div>
       {isRound2Locked && <Lock size={16} className="mt-1" />}
       {isRound2Complete && (
         <div className="flex items-center gap-1 text-neon-green text-xs mt-1">
@@ -378,18 +394,19 @@ const Dashboard = () => {
           <span>COMPLETED</span>
         </div>
       )}
+      {!isRound2Locked && !isRound2Complete && (
+        <div className="flex items-center gap-1 text-neon-blue text-xs mt-1 animate-pulse">
+          <Activity size={12} />
+          <span>SYSTEM_READY</span>
+        </div>
+      )}
     </div>
-    {!isRound2Locked && (
-      <ShoppingBag
-        className="group-hover:text-white transition-colors"
-        size={20}
-      />
-    )}
   </NeonButton>
 </Motion.div>
 
 <Motion.div variants={itemVariants}>
   <NeonButton
+    variant="indigo"
     className={`w-full flex items-center justify-between group ${
       isRound3Locked
         ? "cursor-not-allowed opacity-60"
@@ -397,8 +414,14 @@ const Dashboard = () => {
     }`}
     onClick={() => !isRound3Locked && navigate("/panel/round3-intro")}
   >
-    <div className="flex flex-col items-start">
-      <span>ROUND 3: ANOMALY</span>
+    <div className="flex flex-col items-start min-h-[3.2rem] justify-center w-full">
+      <div className="flex items-center justify-between w-full">
+        <span>ROUND 3: ANOMALY</span>
+        <Activity
+          className="group-hover:text-white transition-colors"
+          size={20}
+        />
+      </div>
       {isRound3Locked && <Lock size={16} className="mt-1" />}
       {isRound3Complete && (
         <div className="flex items-center gap-1 text-neon-green text-xs mt-1">
@@ -406,13 +429,13 @@ const Dashboard = () => {
           <span>COMPLETED</span>
         </div>
       )}
+      {!isRound3Locked && !isRound3Complete && (
+        <div className="flex items-center gap-1 text-neon-indigo text-xs mt-1 animate-pulse">
+          <Activity size={12} />
+          <span>SYSTEM_READY</span>
+        </div>
+      )}
     </div>
-    {!isRound3Locked && (
-      <Activity
-        className="group-hover:text-white transition-colors"
-        size={20}
-      />
-    )}
   </NeonButton>
 </Motion.div>
   </Motion.div>

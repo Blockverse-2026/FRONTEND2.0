@@ -9,6 +9,9 @@ export default {
       colors: {
         neon: {
           cyan: "#00f6ff",
+          sky: "#00d4ff",
+          blue: "#0070ff",
+          indigo: "#4b00ff",
           magenta: "#ff00ff",
           green: "#0f0",
           red: "#f00",
