@@ -58,6 +58,7 @@ export const GameProvider = ({ children }) => {
   /* ================= AUTH ================= */
   const login = (teamId, teamName, accessToken) => {
     localStorage.setItem("BLOCKVERSE_TOKEN", accessToken);
+    localStorage.setItem("BLOCKVERSE_TEAM_NAME", teamName);
     setToken(accessToken);
 
     setGameState((prev) => ({
@@ -72,6 +73,7 @@ export const GameProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem("BLOCKVERSE_TOKEN");
     localStorage.removeItem("BLOCKVERSE_GAME_STATE");
+    localStorage.removeItem("BLOCKVERSE_TEAM_NAME");
     setToken(null);
 
     setGameState({

@@ -54,8 +54,11 @@ const LoginPage = () => {
       }
 
       const accessToken = data.data.accessToken;
-      const teamDbId = data.data.team._id;
-      const teamName = data.data.team.teamId;
+      const teamDbId = data.data.team?._id || data.data.team?.id;
+      // Robust team name extraction
+      const teamName = data.data.team?.teamId || data.data.team?.teamName || teamId;
+      
+      console.log("Login Success. Team:", teamName, "ID:", teamDbId);
       setProcessMessage("Accessing Genova Realm...");
 
       setTimeout(() => {

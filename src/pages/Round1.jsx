@@ -354,8 +354,8 @@ const Round1 = () => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <User size={16} className="text-neon-gold" />
-            <span className="text-neon-gold">
-              Team {gameState.teamName ?? "N/A"}
+            <span className="text-neon-gold uppercase tracking-widest text-xs">
+              Team {gameState.teamName || gameState.teamId || localStorage.getItem("BLOCKVERSE_TEAM_NAME") || "GUEST_OPERATOR"}
             </span>
           </div>
         </div>
