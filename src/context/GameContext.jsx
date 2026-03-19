@@ -61,13 +61,14 @@ export const GameProvider = ({ children }) => {
     localStorage.setItem("BLOCKVERSE_TEAM_NAME", teamName);
     setToken(accessToken);
 
-    setGameState((prev) => ({
-      ...prev,
+    // Reset state completely, then apply new team info
+    setGameState({
+      ...defaultState,
       teamId,
       teamName,
-    }));
+    });
 
-    setAnaDialogue(`Welcome back, Team ${teamName}. Access granted.`);
+    setAnaDialogue(`Welcome, Team ${teamName}. Accessing neural interface...`);
   };
 
   const logout = () => {

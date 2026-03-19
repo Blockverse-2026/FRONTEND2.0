@@ -269,7 +269,7 @@ const Dashboard = () => {
             <h2 className="text-gray-400 font-mono text-sm">CURRENT SESSION</h2>
             <GlitchText
               text={
-                gameState.teamId ? `TEAM ${gameState.teamId}` : "UNKNOWN TEAM"
+                gameState.teamName ? `TEAM ${gameState.teamName}` : (gameState.teamId ? `TEAM ${gameState.teamId}` : "UNKNOWN TEAM")
               }
               size="small"
             />
