@@ -19,7 +19,6 @@ const BlackMarket = () => {
   const { gameState, addTokens, unlockFragment } = useGame();
 
   const [clues, setClues] = useState([]);
-  const [tokens, setTokens] = useState(0);
   const [ownedClues, setOwnedClues] = useState(new Set());
 
    const [selectedClue, setSelectedClue] = useState(null);
@@ -59,7 +58,12 @@ const BlackMarket = () => {
         }
 
         setClues(json.data.availableClues);
-        setTokens(json.data.tokensAvailable);
+        
+        // Sync backend tokens with gameState
+        if (typeof json.data.tokensAvailable === "number") {
+          const diff = json.data.tokensAvailable - gameState.tokens;
+          if (diff !== 0) addTokens(diff);
+        }
       } catch (err) {
         setError(err.message);
       }
@@ -123,7 +127,7 @@ const BlackMarket = () => {
         <div className="mt-6 flex justify-between">
           <div className="px-4 py-2 border border-neon-cyan/40">
             <div className="text-xs text-neon-cyan/70">TOKENS</div>
-            <div className="text-2xl text-neon-cyan">{tokens}</div>
+            <div className="text-2xl text-neon-cyan">{gameState.tokens}</div>
           </div>
 
           <NeonButton variant="secondary" onClick={() => navigate("/dashboard")}>
