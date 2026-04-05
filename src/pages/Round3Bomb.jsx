@@ -22,7 +22,7 @@ const Round3Bomb = () => {
   const initRound = () => {
     const token = localStorage.getItem("BLOCKVERSE_TOKEN");
 
-    fetch(`https://brl.akgec.ac.in/blockverse-26/round3/api/init`, {
+    fetch(`https://brl.akgec.ac.in/blockverse-26/api/round3/init`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
