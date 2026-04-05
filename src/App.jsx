@@ -57,7 +57,7 @@ function App() {
       </AnimatePresence>
 
       {!loading && (
-        <Router basename="/">
+        <Router basename="/blockverse-26">
           <Routes>
             <Route element={<Layout />}>
 
