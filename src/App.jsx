@@ -57,7 +57,7 @@ function App() {
       </AnimatePresence>
 
       {!loading && (
-        <Router>
+        <Router basename="/">
           <Routes>
             <Route element={<Layout />}>
 
