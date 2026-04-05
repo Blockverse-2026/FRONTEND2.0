@@ -55,6 +55,9 @@ const PanelPlayer = ({ panels = [], onComplete }) => {
 
   if (!panels.length) return null;
 
+  // Hardcoded base path for maximum reliability in this deployment environment
+  const BASE = "/blockverse-26/";
+
   return (
     <div
       className="fixed inset-0 z-[9999] bg-black select-none"
@@ -65,7 +68,7 @@ const PanelPlayer = ({ panels = [], onComplete }) => {
         {panels[index] && (
           <motion.img
             key={panels[index].img}
-            src={panels[index].img}
+            src={`${BASE}${panels[index].img}`}
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
