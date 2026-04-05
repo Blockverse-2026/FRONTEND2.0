@@ -6,7 +6,7 @@ import CyberBackground from "../components/CyberBackground";
 import Modal from "../components/Modal";
 import NeonButton from "../components/NeonButton";
 
-const API = "https://blockverse-backend.onrender.com";
+const API = "https://brl.akgec.ac.in/blockverse-26";
 
 const Round3 = () => {
   const navigate = useNavigate();

@@ -37,7 +37,7 @@ const LoginPage = () => {
 
     try {
       const res = await fetch(
-        "https://blockverse-backend.onrender.com/api/team/login",
+        "https://brl.akgec.ac.in/blockverse-26/api/team/login",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

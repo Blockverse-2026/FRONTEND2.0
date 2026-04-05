@@ -69,7 +69,7 @@ const Round1 = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("BLOCKVERSE_TOKEN");
-    fetch("https://blockverse-backend.onrender.com/api/round1/progress", {
+    fetch("https://brl.akgec.ac.in/blockverse-26/api/round1/progress", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())

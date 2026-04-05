@@ -43,7 +43,7 @@ const BlackMarket = () => {
     const fetchStore = async () => {
       try {
         const res = await fetch(
-          "https://blockverse-backend.onrender.com/api/round2/store",
+          "https://brl.akgec.ac.in/blockverse-26/api/round2/store",
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("BLOCKVERSE_TOKEN")}`,
