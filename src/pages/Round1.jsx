@@ -126,7 +126,7 @@ const Round1 = () => {
         const token = localStorage.getItem("BLOCKVERSE_TOKEN");
 
         const res = await fetch(
-          "https://blockverse-backend.onrender.com/api/round1/init",
+          "https://brl.akgec.ac.in/blockverse-26/api/round1/init",
           {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
@@ -239,7 +239,7 @@ const Round1 = () => {
 
     try {
       const res = await fetch(
-        "https://blockverse-backend.onrender.com/api/round1/submit",
+        "https://brl.akgec.ac.in/blockverse-26/api/round1/submit",
         {
           method: "POST",
           headers: {

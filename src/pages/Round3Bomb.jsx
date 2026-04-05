@@ -200,7 +200,7 @@ const Round3Bomb = () => {
     setSubmitting(true);
     const token = localStorage.getItem("BLOCKVERSE_TOKEN");
 
-    fetch(`https://blockverse-backend.onrender.com/api/round3/submit`, {
+    fetch(`https://brl.akgec.ac.in/blockverse-26/api/round3/submit`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

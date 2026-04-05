@@ -137,7 +137,7 @@ const Round2 = () => {
 
     try {
       const res = await fetch(
-        "https://blockverse-backend.onrender.com/api/round2/submit",
+        "https://brl.akgec.ac.in/blockverse-26/api/round2/submit",
         {
           method: "POST",
           headers: {

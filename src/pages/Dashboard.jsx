@@ -106,7 +106,7 @@ const Dashboard = () => {
 
         /* ---------- ROUND 1 POINTS ---------- */
         const r1 = await fetch(
-          "https://blockverse-backend.onrender.com/api/round1/progress",
+          "https://brl.akgec.ac.in/blockverse-26/api/round1/progress",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -124,7 +124,7 @@ const Dashboard = () => {
 
         /* ---------- ROUND 2 TOKENS ---------- */
         const r2 = await fetch(
-          "https://blockverse-backend.onrender.com/api/round2/progress",
+          "https://brl.akgec.ac.in/blockverse-26/api/round2/progress",
           {
             headers: { Authorization: `Bearer ${token}` },
           }

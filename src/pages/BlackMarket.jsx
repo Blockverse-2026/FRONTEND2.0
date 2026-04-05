@@ -81,7 +81,7 @@ const BlackMarket = () => {
 
     try {
       const res = await fetch(
-        "https://blockverse-backend.onrender.com/api/round2/store/buy",
+        "https://brl.akgec.ac.in/blockverse-26/api/round2/store/buy",
         {
           method: "POST",
           headers: {
