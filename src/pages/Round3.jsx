@@ -5,14 +5,22 @@ import GlitchText from "../components/GlitchText";
 import CyberBackground from "../components/CyberBackground";
 import Modal from "../components/Modal";
 import NeonButton from "../components/NeonButton";
-
+import { useTabSwitchGuard } from "../utils/useTabSwitchGuard.js";
+import { TabGuardPopups } from "../components/TabGuardPopups.jsx";
 const API = "https://brl.akgec.ac.in/blockverse-26";
 
 const Round3 = () => {
   const navigate = useNavigate();
+  const resetGuard = useTabSwitchGuard({
+  maxAttempts: 3,
+  onWarning: (attempt, remaining) => setTabWarning({ attempt, remaining }),
+  onReset: () => setTabReset(true),
+});
   const [data, setData] = useState(null);
   const [showBriefing, setShowBriefing] = useState(false);
   const [selectedBomb, setSelectedBomb] = useState(null);
+  const [tabWarning, setTabWarning] = useState(null);
+  const [tabReset, setTabReset] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("BLOCKVERSE_TOKEN");
@@ -70,6 +78,13 @@ const Round3 = () => {
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-black p-4 md:p-12">
       <CyberBackground />
+      <TabGuardPopups
+  warning={tabWarning}
+  tabReset={tabReset}
+  onDismiss={() => setTabWarning(null)}
+  onRestart={() => navigate("/dashboard")}
+  resetLabel="EXIT TO DASHBOARD"
+/>
       
       {/* DECORATIVE ELEMENTS */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
