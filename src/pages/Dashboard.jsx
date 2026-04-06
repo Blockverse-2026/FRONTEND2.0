@@ -20,6 +20,7 @@ const DASHBOARD_INTRO = [
   "Welcome to BlockVerse. I'm ANA, your system AI.",
   "Story: A fractured network hides critical data fragments.",
   "Rounds: FIREWALL, MARKETPLACE, ANOMALY. Navigate, solve, progress.",
+  "Streak Bonus: Maintain a streak of 5 correct answers to gain +10 bonus points!",
 ];
 
 const Dashboard = () => {
@@ -473,20 +474,6 @@ const Dashboard = () => {
                       <span>75%</span>
                     </div>
                   </div>
-
-                  <div className="mt-6">
-                    <button 
-                      onClick={() => {
-                        localStorage.removeItem("BLOCKVERSE_GAME_STATE");
-                        localStorage.removeItem("round1_nodes");
-                        localStorage.removeItem("round1_score");
-                        window.location.reload();
-                      }}
-                      className="w-full py-2 border border-red-900/30 text-red-900/50 hover:border-red-600 hover:text-red-600 text-[10px] tracking-widest font-mono transition-all uppercase"
-                    >
-                      [ RESET_CORE_PROGRESS ]
-                    </button>
-                  </div>
                 </div>
               </TerminalCard>
             </Motion.div>
@@ -542,7 +529,7 @@ const Dashboard = () => {
           <div className="flex justify-end gap-3">
             {introStep < DASHBOARD_INTRO.length - 1 ? (
               <NeonButton
-                variant="secondary"
+                variant="cyan"
                 onClick={() => {
                   const next = introStep + 1;
                   setIntroStep(next);

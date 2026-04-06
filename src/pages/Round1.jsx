@@ -282,9 +282,13 @@ const Round1 = () => {
         });
 
         if (json.data?.pointsAwarded) {
-          setScore((prev) => prev + json.data.pointsAwarded);
-          setXp((prev) => prev + json.data.pointsAwarded);
-          setStreak((s) => s + 1);
+          const basePoints = json.data.pointsAwarded;
+          const newStreak = streak + 1;
+          const streakBonus = newStreak > 0 && newStreak % 5 === 0 ? 10 : 0;
+          
+          setScore((prev) => prev + basePoints + streakBonus);
+          setXp((prev) => prev + basePoints + streakBonus);
+          setStreak(newStreak);
           setComboMultiplier((m) => Math.min(m + 0.1, 3));
         }
 
@@ -470,11 +474,16 @@ const Round1 = () => {
                 <span className="text-neon-gold">XP</span>
                 <span className="text-neon-gold">Lvl {level}</span>
               </div>
-              <div className="h-2 bg-black/40 border border-neon-gold/40">
+              <div className="h-4 bg-black/60 border border-neon-gold/40 relative group overflow-hidden">
                 <div
-                  className="h-full bg-neon-gold"
+                  className="h-full bg-gradient-to-r from-neon-gold/40 via-neon-gold to-neon-gold/40 transition-all duration-500 shadow-[0_0_15px_rgba(255,170,0,0.4)] relative"
                   style={{ width: xpPct + "%" }}
-                />
+                >
+                  <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] animate-shimmer w-24" />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center text-[10px] text-white/80 font-bold mix-blend-difference pointer-events-none">
+                  {xpInLevel} / 100
+                </div>
               </div>
 
               <div className="flex items-center justify-between text-xs">

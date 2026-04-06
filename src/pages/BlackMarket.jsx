@@ -58,6 +58,17 @@ const BlackMarket = () => {
         }
 
         setClues(json.data.availableClues);
+
+        // Sync purchased clues from backend
+        if (Array.isArray(json.data.purchasedClues)) {
+          json.data.purchasedClues.forEach((clue) => {
+            unlockFragment({
+              clueId: clue.clueId,
+              title: clue.title,
+              data: clue.description,
+            });
+          });
+        }
         
         // Sync backend tokens with gameState
         if (typeof json.data.tokensAvailable === "number") {
@@ -107,6 +118,7 @@ const BlackMarket = () => {
         title: selectedClue.title,
         data: selectedClue.description, // Round 3 expects 'data' field
       });
+      setOwnedClues(prev => new Set([...prev, selectedClue.clueId]));
       setConfirmOpen(true);
     } catch {
       setTransactionError("Transaction failed");

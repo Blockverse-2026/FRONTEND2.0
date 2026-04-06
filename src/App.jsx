@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
@@ -27,6 +28,59 @@ import PanelPlayer from "./components/PanelPlayer";
 import { PANELS_DATA } from "./utils/panelsData";
 import { PANELS } from "./utils/panelKeys";
 import { markPanelSeen } from "./utils/panelProgress";
+import { useGame } from "./context/GameContext";
+
+const ProtectedRoute = ({ children, requiredRound }) => {
+  const { token, gameState } = useGame();
+  const location = useLocation();
+
+  if (!token && location.pathname !== "/login" && location.pathname !== "/") {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (requiredRound) {
+    const isUnlocked =
+      requiredRound === "round1" ||
+      gameState.completedRounds.includes(
+        requiredRound === "round2" ? "round1" : "round2"
+      );
+
+    if (!isUnlocked) {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  return children;
+};
+
+const NavigationGuard = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Prevent back/forward by pushing state back on popstate
+    const handlePopState = (e) => {
+      window.history.pushState(null, "", window.location.href);
+    };
+
+    // Initial push to ensure there is something to pop
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handlePopState);
+
+    // Warn on refresh/close
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [location.pathname]);
+
+  return null;
+};
 
 const PanelRoute = ({ panelKey, next }) => {
   const navigate = useNavigate();
@@ -58,64 +112,106 @@ function App() {
 
       {!loading && (
         <Router basename="/blockverse-26">
+          <NavigationGuard />
           <Routes>
             <Route element={<Layout />}>
 
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
 
               {/* ROUND 1 */}
               <Route
                 path="/panel/round1-intro"
                 element={
-                  <PanelRoute
-                    panelKey={PANELS.ROUND1_INTRO}
-                    next="/round1"
-                  />
+                  <ProtectedRoute>
+                    <PanelRoute
+                      panelKey={PANELS.ROUND1_INTRO}
+                      next="/round1"
+                    />
+                  </ProtectedRoute>
                 }
               />
-              <Route path="/round1" element={<Round1 />} />
+              <Route path="/round1" element={
+                <ProtectedRoute requiredRound="round1">
+                  <Round1 />
+                </ProtectedRoute>
+              } />
 
               {/* ROUND 2 */}
               <Route
                 path="/panel/round2-intro"
                 element={
-                  <PanelRoute
-                    panelKey={PANELS.ROUND2_INTRO}
-                    next="/round2/phase1"
-                  />
+                  <ProtectedRoute requiredRound="round2">
+                    <PanelRoute
+                      panelKey={PANELS.ROUND2_INTRO}
+                      next="/round2/phase1"
+                    />
+                  </ProtectedRoute>
                 }
               />
-              <Route path="/round2/phase1" element={<Round2 />} />
-              <Route path="/round2/phase2" element={<BlackMarket />} />
+              <Route path="/round2/phase1" element={
+                <ProtectedRoute requiredRound="round2">
+                  <Round2 />
+                </ProtectedRoute>
+              } />
+              <Route path="/round2/phase2" element={
+                <ProtectedRoute requiredRound="round2">
+                  <BlackMarket />
+                </ProtectedRoute>
+              } />
 
               {/* ROUND 3 */}
               <Route
                 path="/panel/round3-intro"
                 element={
-                  <PanelRoute
-                    panelKey={PANELS.ROUND3_INTRO}
-                    next="/round3"
-                  />
+                  <ProtectedRoute requiredRound="round3">
+                    <PanelRoute
+                      panelKey={PANELS.ROUND3_INTRO}
+                      next="/round3"
+                    />
+                  </ProtectedRoute>
                 }
               />
-              <Route path="/round3" element={<Round3 />} />
-              <Route path="/round3/bomb/:id" element={<Round3Bomb />} />
+              <Route path="/round3" element={
+                <ProtectedRoute requiredRound="round3">
+                  <Round3 />
+                </ProtectedRoute>
+              } />
+              <Route path="/round3/bomb/:id" element={
+                <ProtectedRoute requiredRound="round3">
+                  <Round3Bomb />
+                </ProtectedRoute>
+              } />
 
               {/* FINAL */}
               <Route
                 path="/panel/final"
                 element={
-                  <PanelRoute
-                    panelKey={PANELS.FINAL}
-                    next="/game-over"
-                  />
+                  <ProtectedRoute requiredRound="round3">
+                    <PanelRoute
+                      panelKey={PANELS.FINAL}
+                      next="/game-over"
+                    />
+                  </ProtectedRoute>
                 }
               />
 
-              <Route path="/game-over" element={<GameOver />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/game-over" element={
+                <ProtectedRoute>
+                  <GameOver />
+                </ProtectedRoute>
+              } />
+              <Route path="/leaderboard" element={
+                <ProtectedRoute>
+                  <Leaderboard />
+                </ProtectedRoute>
+              } />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
