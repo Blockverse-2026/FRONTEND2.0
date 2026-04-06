@@ -8,12 +8,21 @@ import { useGame } from "../context/GameContext";
 import CyberBackground from "../components/CyberBackground";
 import GlitchText from "../components/GlitchText";
 import { useNavigate } from "react-router-dom";
+import { useTabSwitchGuard } from "../utils/useTabSwitchGuard.js";
+import { TabGuardPopups } from "../components/TabGuardPopups.jsx";
 
 const ROUND_TIME = 900;
 const QUESTION_TIME = 15;
 
 const Round2 = () => {
   const { gameState, completeRound, setAnaDialogue } = useGame();
+  const resetGuard = useTabSwitchGuard({
+  maxAttempts: 3,
+  onWarning: (attempt, remaining) => setTabWarning({ attempt, remaining }),
+  onReset: () => {
+    setTabReset(true);
+  },
+});
   const navigate = useNavigate();
 
   const [questions, setQuestions] = useState([]);
@@ -31,6 +40,8 @@ const Round2 = () => {
   const [comboMultiplier, setComboMultiplier] = useState(1);
   const [showBriefing, setShowBriefing] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [tabWarning, setTabWarning] = useState(null);
+  const [tabReset, setTabReset] = useState(false);
 
   const activeQuestion = questions[current];
 
@@ -187,6 +198,13 @@ const Round2 = () => {
   return (
     <div className="flex-1 min-h-screen relative p-4 md:p-6 overflow-hidden flex items-center justify-center bg-black">
       <CyberBackground />
+      <TabGuardPopups
+  warning={tabWarning}
+  tabReset={tabReset}
+  onDismiss={() => setTabWarning(null)}
+  onRestart={() => { setTabReset(false); resetGuard(); }}
+  resetLabel="RESUME RAPID FIRE"
+/>
       
       {/* ATMOSPHERIC GLOWS */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-neon-cyan/5 rounded-full blur-[120px] pointer-events-none" />

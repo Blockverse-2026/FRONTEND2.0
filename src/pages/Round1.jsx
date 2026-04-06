@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 import GlitchText from "../components/GlitchText";
 import CyberBackground from "../components/CyberBackground";
 import { useGame } from "../context/GameContext";
+import { useTabSwitchGuard } from "../utils/useTabSwitchGuard.js";
+import { TabGuardPopups } from "../components/TabGuardPopups.jsx";
 
 const TOTAL_NODES = 50;
 const ROUND_TIME = 300; // Testing: 5 minutes (300s). For 30 mins, use 1800.
@@ -15,6 +17,13 @@ const ROUND_TIME = 300; // Testing: 5 minutes (300s). For 30 mins, use 1800.
 const Round1 = () => {
   const navigate = useNavigate();
   const { gameState, completeRound } = useGame();
+  const resetGuard = useTabSwitchGuard({
+  maxAttempts: 3,
+  onWarning: (attempt, remaining) => setTabWarning({ attempt, remaining }),
+  onReset: () => {
+    setTabReset(true);
+  },
+});
 
   const [questions, setQuestions] = useState([]);
   const [nodes, setNodes] = useState(
@@ -43,6 +52,8 @@ const Round1 = () => {
   const [showSummary, setShowSummary] = useState(false);
   const [earlyFinish, setEarlyFinish] = useState(false);
   const [timeLeft, setTimeLeft] = useState(ROUND_TIME);
+  const [tabWarning, setTabWarning] = useState(null);
+  const [tabReset, setTabReset] = useState(false);
 
   useEffect(() => {
     if (nodes.every((n) => n.status !== "locked") && !earlyFinish && timeLeft > 0) {
@@ -340,6 +351,13 @@ const Round1 = () => {
       className="flex-1 pt-6 px-6 flex flex-col gap-6 overflow-hidden relative"
     >
       <CyberBackground />
+      <TabGuardPopups
+  warning={tabWarning}
+  tabReset={tabReset}
+  onDismiss={() => setTabWarning(null)}
+  onRestart={() => { setTabReset(false); resetGuard(); }}
+  resetLabel="RESUME GAME"
+/>
       <div className="scanline-overlay" />
 
       {/* TOP NAV */}

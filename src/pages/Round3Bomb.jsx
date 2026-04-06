@@ -6,17 +6,26 @@ import NeonButton from "../components/NeonButton";
 import CyberBackground from "../components/CyberBackground";
 import { Lock, HelpCircle } from "lucide-react";
 import { useGame } from "../context/GameContext";
+import { useTabSwitchGuard } from "../utils/useTabSwitchGuard.js";
+import { TabGuardPopups } from "../components/TabGuardPopups.jsx";
 
 const Round3Bomb = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { gameState } = useGame();
+  const resetGuard = useTabSwitchGuard({
+  maxAttempts: 3,
+  onWarning: (attempt, remaining) => setTabWarning({ attempt, remaining }),
+  onReset: () => setTabReset(true),
+});
 
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showClues, setShowClues] = useState(false);
+  const [tabWarning, setTabWarning] = useState(null);
+  const [tabReset, setTabReset] = useState(false);
 
   // ---------------- INIT ----------------
   const initRound = () => {
@@ -225,7 +234,15 @@ const Round3Bomb = () => {
 
   // ---------------- UI ----------------
   return (
+    
     <div className="h-screen w-full p-4 md:p-8 flex flex-col items-center justify-center gap-4 md:gap-6 text-white overflow-hidden relative">
+      <TabGuardPopups
+        warning={tabWarning}
+        tabReset={tabReset}
+        onDismiss={() => setTabWarning(null)}
+        onRestart={() => navigate("/dashboard")}
+        resetLabel="EXIT TO DASHBOARD"
+      />
       <GlitchText
         text={`BOMB ${id} — CORE DIFFUSION`}
         className="text-red-500 text-3xl md:text-5xl font-bold tracking-tighter"
