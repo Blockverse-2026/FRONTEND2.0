@@ -28,6 +28,16 @@ const BlackMarket = () => {
    const [transactionError, setTransactionError] = useState(null);
    const [error, setError] = useState(null);
 
+   // Auto-close confirmation modal
+   useEffect(() => {
+    if (confirmOpen) {
+      const timer = setTimeout(() => {
+        setConfirmOpen(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [confirmOpen]);
+
    // Initialize ownedClues from gameState
    useEffect(() => {
     if (gameState.fragments) {
@@ -119,7 +129,8 @@ const BlackMarket = () => {
         data: selectedClue.description, // Round 3 expects 'data' field
       });
       setOwnedClues(prev => new Set([...prev, selectedClue.clueId]));
-      setConfirmOpen(true);
+      setClueModalOpen(false); // Close the buy modal
+      setConfirmOpen(true);    // Show confirmation
     } catch {
       setTransactionError("Transaction failed");
     } finally {
