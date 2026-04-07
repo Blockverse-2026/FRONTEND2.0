@@ -41,6 +41,7 @@ const ProtectedRoute = ({ children, requiredRound }) => {
   if (requiredRound) {
     const isUnlocked =
       requiredRound === "round1" ||
+      requiredRound === "round3" ||
       gameState.completedRounds.includes(
         requiredRound === "round2" ? "round1" : "round2"
       );

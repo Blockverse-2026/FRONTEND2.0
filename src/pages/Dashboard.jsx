@@ -82,7 +82,7 @@ const Dashboard = () => {
 
   const isRound1Locked = isRound1Complete;
   const isRound2Locked = !isRound1Complete || isRound2Complete;
-  const isRound3Locked = !isRound2Complete;
+  const isRound3Locked = isRound3Complete;
 
 
   useEffect(() => {
