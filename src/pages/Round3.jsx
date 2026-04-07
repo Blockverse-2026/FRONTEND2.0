@@ -33,7 +33,13 @@ const Round3 = () => {
       },
     })
       .then((res) => res.json())
-      .then((res) => setData(res.data))
+      .then((res) => {
+        setData(res.data);
+        // Show briefing if not seen yet
+        if (!localStorage.getItem("round3_briefing_seen")) {
+          setShowBriefing(true);
+        }
+      })
       .catch((err) => console.error("Round3 hub init error:", err));
   }, []);
 
