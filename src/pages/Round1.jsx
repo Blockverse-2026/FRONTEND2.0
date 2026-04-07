@@ -12,7 +12,7 @@ import { useTabSwitchGuard } from "../utils/useTabSwitchGuard.js";
 import { TabGuardPopups } from "../components/TabGuardPopups.jsx";
 
 const TOTAL_NODES = 50;
-const ROUND_TIME = 30 * 60; // 30 minutes in seconds
+const ROUND_TIME = 30 * 60 + 30; // 30 minutes and 30 seconds in seconds
 
 const Round1 = () => {
   const navigate = useNavigate();
