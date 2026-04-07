@@ -28,6 +28,16 @@ const BlackMarket = () => {
    const [transactionError, setTransactionError] = useState(null);
    const [error, setError] = useState(null);
 
+   // Auto-close confirmation modal
+   useEffect(() => {
+    if (confirmOpen) {
+      const timer = setTimeout(() => {
+        setConfirmOpen(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [confirmOpen]);
+
    // Initialize ownedClues from gameState
    useEffect(() => {
     if (gameState.fragments) {
@@ -53,11 +63,33 @@ const BlackMarket = () => {
 
         const json = await res.json();
 
-        if (!res.ok || !json?.data?.availableClues) {
+        if (!res.ok || !json?.data) {
           throw new Error("Failed to load store");
         }
 
-        setClues(json.data.availableClues);
+        // Combine available and purchased clues for the grid
+        const allClues = [
+          ...(json.data.availableClues || []),
+          ...(json.data.purchasedClues || [])
+        ];
+        
+        // Remove duplicates if any
+        const uniqueClues = Array.from(new Map(allClues.map(c => [c.clueId, c])).values());
+        setClues(uniqueClues);
+
+        // Sync purchased clues with gameState and ownedClues
+        if (Array.isArray(json.data.purchasedClues)) {
+          const purchasedIds = json.data.purchasedClues.map(c => c.clueId);
+          setOwnedClues(prev => new Set([...Array.from(prev), ...purchasedIds]));
+
+          json.data.purchasedClues.forEach((clue) => {
+            unlockFragment({
+              clueId: clue.clueId,
+              title: clue.title,
+              data: clue.description,
+            });
+          });
+        }
         
         // Sync backend tokens with gameState
         if (typeof json.data.tokensAvailable === "number") {
@@ -108,7 +140,7 @@ const BlackMarket = () => {
         data: selectedClue.description, // Round 3 expects 'data' field
       });
       setOwnedClues(prev => new Set([...prev, selectedClue.clueId]));
-      setConfirmOpen(true);
+      setConfirmOpen(true);    // Show confirmation
     } catch {
       setTransactionError("Transaction failed");
     } finally {
@@ -156,6 +188,12 @@ const BlackMarket = () => {
                   <h3 className="text-white">{clue.title}</h3>
                   <span className={`text-xs ${risk.text}`}>{risk.label}</span>
                 </div>
+
+                {owned && (
+                  <div className="mt-1 text-[8px] text-neon-green tracking-widest font-bold">
+                    ✓ PURCHASED
+                  </div>
+                )}
 
                 <div
                   className={`mt-3 ${
@@ -209,7 +247,11 @@ const BlackMarket = () => {
                 CLOSE
               </NeonButton>
 
-              {!ownedClues.has(selectedClue.clueId) && (
+              {ownedClues.has(selectedClue.clueId) ? (
+                <div className="flex items-center text-neon-green text-sm font-bold gap-2 pr-2">
+                  ✓ PURCHASED
+                </div>
+              ) : (
                 <NeonButton
                   onClick={buyClue}
                   disabled={verifying}

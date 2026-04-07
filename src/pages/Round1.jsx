@@ -12,7 +12,7 @@ import { useTabSwitchGuard } from "../utils/useTabSwitchGuard.js";
 import { TabGuardPopups } from "../components/TabGuardPopups.jsx";
 
 const TOTAL_NODES = 50;
-const ROUND_TIME = 300; // Testing: 5 minutes (300s). For 30 mins, use 1800.
+const ROUND_TIME = 30; // 30 seconds limit
 
 const Round1 = () => {
   const navigate = useNavigate();
