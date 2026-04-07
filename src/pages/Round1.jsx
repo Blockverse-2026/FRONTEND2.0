@@ -55,6 +55,13 @@ const Round1 = () => {
   const [tabWarning, setTabWarning] = useState(null);
   const [tabReset, setTabReset] = useState(false);
 
+  // Redirect if already completed
+  useEffect(() => {
+    if (gameState.completedRounds.includes("round1") && !isFinished && !earlyFinish) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [gameState.completedRounds, navigate, isFinished, earlyFinish]);
+
   useEffect(() => {
     if (nodes.every((n) => n.status !== "locked") && !earlyFinish && timeLeft > 0) {
       setEarlyFinish(true);
@@ -332,9 +339,10 @@ const Round1 = () => {
   const unlockedPct = Math.round((unlockedCount / TOTAL_NODES) * 100);
   const minutes = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   const seconds = String(timeLeft % 60).padStart(2, "0");
-  const level = Math.floor(xp / 100) + 1;
-  const xpInLevel = xp % 100;
-  const xpPct = Math.min(100, Math.round((xpInLevel / 100) * 100));
+  
+  // Streak milestone progress (every 5)
+  const streakProgress = streak % 5;
+  const streakPct = (streakProgress / 5) * 100;
 
   return (
     <Motion.div
@@ -489,18 +497,18 @@ const Round1 = () => {
               </p>
 
               <div className="flex items-center justify-between">
-                <span className="text-neon-gold">XP</span>
-                <span className="text-neon-gold">Lvl {level}</span>
+                <span className="text-neon-cyan">STREAK MILESTONE</span>
+                <span className="text-neon-cyan text-xs">BONUS AT 5</span>
               </div>
-              <div className="h-4 bg-black/60 border border-neon-gold/40 relative group overflow-hidden">
+              <div className="h-4 bg-black/60 border border-neon-cyan/40 relative group overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-neon-gold/40 via-neon-gold to-neon-gold/40 transition-all duration-500 shadow-[0_0_15px_rgba(255,170,0,0.4)] relative"
-                  style={{ width: xpPct + "%" }}
+                  className="h-full bg-gradient-to-r from-neon-cyan/40 via-neon-cyan to-neon-cyan/40 transition-all duration-500 shadow-[0_0_15px_rgba(0,246,255,0.4)] relative"
+                  style={{ width: streakPct + "%" }}
                 >
                   <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] animate-shimmer w-24" />
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center text-[10px] text-white/80 font-bold mix-blend-difference pointer-events-none">
-                  {xpInLevel} / 100
+                  {streakProgress} / 5
                 </div>
               </div>
 

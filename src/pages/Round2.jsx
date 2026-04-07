@@ -47,6 +47,13 @@ const Round2 = () => {
 
   const isRoundComplete = isFinished || roundTime <= 0;
 
+  // Redirect if already completed
+  useEffect(() => {
+    if (gameState.completedRounds.includes("round2") && !isFinished) {
+      navigate("/round2/phase2", { replace: true });
+    }
+  }, [gameState.completedRounds, navigate, isFinished]);
+
   useEffect(() => {
     if (isRoundComplete && !showBriefing) {
       completeRound("round2");
@@ -171,9 +178,12 @@ const Round2 = () => {
       if (json.data.correct) {
         setAnswerStatus("correct");
 
-        setTokens(json.data.totalRound2Score);
+        const newStreak = streak + 1;
+        const streakBonus = newStreak > 0 && newStreak % 5 === 0 ? 2 : 0;
+        
+        setTokens(json.data.totalRound2Score + streakBonus);
 
-        setStreak((s) => s + 1);
+        setStreak(newStreak);
         setComboMultiplier((m) => Math.min(m + 0.1, 3));
       } else {
         setAnswerStatus("incorrect");
@@ -429,8 +439,8 @@ const Round2 = () => {
 
               <div className="p-3 bg-neon-gold/5 border border-neon-gold/10 rounded-sm space-y-3">
                 <div className="flex justify-between items-center">
-                  <div className="text-neon-gold/60 text-[9px] tracking-[0.1em] uppercase font-bold">Streak Bonus</div>
-                  <span className="text-neon-gold text-[10px] font-bold tracking-widest">{streak}/5</span>
+                  <div className="text-neon-gold/60 text-[9px] tracking-[0.1em] uppercase font-bold">Streak Bonus (+2 TOKENS)</div>
+                  <span className="text-neon-gold text-[10px] font-bold tracking-widest">{(streak % 5)}/5</span>
                 </div>
                 <div className="flex gap-1.5">
                   {[...Array(5)].map((_, i) => (
@@ -440,7 +450,7 @@ const Round2 = () => {
                     >
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: streak > i ? "100%" : "0%" }}
+                        animate={{ width: (streak % 5) > i ? "100%" : "0%" }}
                         className="absolute inset-0 bg-neon-gold shadow-[0_0_10px_#ffaa00]"
                       />
                     </div>
@@ -462,7 +472,7 @@ const Round2 = () => {
           </TerminalCard>
 
           <div className="p-3 border border-neon-cyan/10 bg-neon-cyan/5 rounded backdrop-blur-sm text-[9px] font-mono text-neon-cyan/40 uppercase tracking-[0.1em] leading-relaxed">
-            <span className="text-neon-cyan/60 font-bold">[!] ADVISORY:</span> Complete the sequence to unlock Phase 2. High streaks maximize token yield.
+            <span className="text-neon-cyan/60 font-bold">[!] ADVISORY:</span> Complete the sequence to unlock Phase 2. High streaks (5+) grant +2 FREE TOKENS.
           </div>
         </motion.div>
 

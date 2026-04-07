@@ -24,7 +24,7 @@ const GlitchText = ({ text, as = 'h1', className, size = 'large' }) => {
         )}
         style={{ clipPath: 'polygon(0 0, 100% 0, 100% 45%, 0 45%)', transform: 'translate(-2px)' }}
       >
-        {text}
+        {text.toUpperCase()}
       </Tag>
       <Tag 
         aria-hidden="true"
@@ -35,7 +35,7 @@ const GlitchText = ({ text, as = 'h1', className, size = 'large' }) => {
         )}
         style={{ clipPath: 'polygon(0 80%, 100% 20%, 100% 100%, 0 100%)', transform: 'translate(2px)', animationDirection: 'reverse' }}
       >
-        {text}
+        {text.toUpperCase()}
       </Tag>
       
       <Tag 
@@ -47,7 +47,7 @@ const GlitchText = ({ text, as = 'h1', className, size = 'large' }) => {
         )}
         style={{ clipPath: 'inset(10% 0 40% 0)', transform: 'translate(4px, 0)' }}
       >
-        {text}
+        {text.toUpperCase()}
       </Tag>
     </div>
   );
