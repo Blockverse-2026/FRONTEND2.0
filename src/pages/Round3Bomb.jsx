@@ -26,12 +26,17 @@ const Round3Bomb = () => {
   const [showClues, setShowClues] = useState(false);
   const [tabWarning, setTabWarning] = useState(null);
   const [tabReset, setTabReset] = useState(false);
+  
+  // Feedback states
+  const [wrongAnswer, setWrongAnswer] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [totalMistakes, setTotalMistakes] = useState(0);
 
   // ---------------- INIT ----------------
-  const initRound = () => {
+  const initRound = (isInitial = false) => {
     const token = localStorage.getItem("BLOCKVERSE_TOKEN");
 
-    fetch(`https://brl.akgec.ac.in/blockverse-26/api/round3/init`, {
+    return fetch(`https://brl.akgec.ac.in/blockverse-26/api/round3/init`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -40,7 +45,30 @@ const Round3Bomb = () => {
     })
       .then((res) => res.json())
       .then((res) => {
-        setData(res.data);
+        if (res.data) {
+          setData(res.data);
+          const currentTotal = res.data.bombs.reduce((sum, b) => sum + (b.mistakes || 0), 0);
+          
+          // Check if mistakes increased (only if not initial load)
+          if (!isInitial && currentTotal > totalMistakes) {
+            setWrongAnswer(true);
+            setFeedbackMessage("INCORRECT DATA SEQUENCE // INTEGRITY BREACHED");
+            setTimeout(() => {
+              setWrongAnswer(false);
+              setFeedbackMessage("");
+            }, 1500);
+          }
+
+          // Check for Game Over
+          if (currentTotal >= 20) {
+            setFeedbackMessage("TOO MANY MISTAKES // SYSTEM TERMINATED");
+            setTimeout(() => {
+              navigate("/game-over");
+            }, 2000);
+          }
+
+          setTotalMistakes(currentTotal);
+        }
         setLoading(false);
       })
       .catch((err) => {
@@ -50,7 +78,7 @@ const Round3Bomb = () => {
   };
 
   useEffect(() => {
-    initRound();
+    initRound(true);
   }, []);
 
   // ---------------- LOADING ----------------
@@ -204,7 +232,7 @@ const Round3Bomb = () => {
 
   // ---------------- SUBMIT ----------------
   const submitAnswer = () => {
-    if (!selected) return;
+    if (!selected || submitting) return;
 
     setSubmitting(true);
     const token = localStorage.getItem("BLOCKVERSE_TOKEN");
@@ -221,9 +249,10 @@ const Round3Bomb = () => {
         answer: selected,
       }),
     })
-      .then(() => {
+      .then((res) => res.json())
+      .then((res) => {
         setSelected("");
-        initRound();
+        initRound(false);
         setSubmitting(false);
       })
       .catch((err) => {
@@ -236,6 +265,7 @@ const Round3Bomb = () => {
   return (
     
     <div className="h-screen w-full p-4 md:p-8 flex flex-col items-center justify-center gap-4 md:gap-6 text-white overflow-hidden relative">
+      <CyberBackground />
       <TabGuardPopups
         warning={tabWarning}
         tabReset={tabReset}
@@ -247,45 +277,6 @@ const Round3Bomb = () => {
         text={`BOMB ${id} — CORE DIFFUSION`}
         className="text-red-500 text-3xl md:text-5xl font-bold tracking-tighter"
       />
-
-      {/* CLUES PANEL */}
-      <div 
-        className="absolute bottom-24 right-6 z-50"
-        onMouseEnter={() => setShowClues(true)}
-        onMouseLeave={() => setShowClues(false)}
-      >
-        <div className="flex items-center gap-3 text-cyan-400/80 hover:text-cyan-400 transition-colors cursor-pointer bg-black/50 p-3 rounded-lg border-2 border-cyan-400/30 hover:border-cyan-400/60 shadow-[0_0_20px_rgba(0,246,255,0.1)] hover:shadow-[0_0_30px_rgba(0,246,255,0.2)]">
-          <HelpCircle size={20} />
-          <span className="text-sm font-orbitron font-bold tracking-widest uppercase">VIEW CLUES</span>
-        </div>
-
-        <AnimatePresence>
-          {showClues && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute bottom-full mb-3 right-0 w-96 bg-black/90 border-2 border-neon-cyan/30 rounded-lg p-5 shadow-lg backdrop-blur-xl z-50"
-            >
-              <h3 className="font-orbitron text-neon-cyan text-lg border-b-2 border-neon-cyan/20 pb-3 mb-4">ACQUIRED INTEL</h3>
-              {gameState.fragments.length > 0 ? (
-                <ul className="space-y-4 text-sm font-mono text-white/80">
-                  {gameState.fragments.map((fragment, i) => (
-                    <li key={i} className="border-l-4 border-neon-cyan/40 pl-4 leading-relaxed">
-                      <div className="text-neon-cyan text-[10px] uppercase mb-1">
-                        {typeof fragment === 'string' ? 'System Data' : (fragment.title || 'Intel Fragment')}
-                      </div>
-                      {typeof fragment === 'string' ? fragment : fragment.data}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm font-mono text-white/50 italic">No data fragments acquired from the Black Market.</p>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
 
       {/* CORE */}
       <motion.div
@@ -310,7 +301,8 @@ const Round3Bomb = () => {
           Sequence: {current.questionNumber} / {bomb.questions.length}
         </div>
 
-        <div className="text-white font-mono text-sm md:text-base leading-relaxed px-4 py-2 border border-white/10 bg-white/5 rounded backdrop-blur-sm min-h-[4rem] flex items-center justify-center">
+        <div className="text-white font-mono text-sm md:text-base leading-relaxed px-4 py-2 border border-white/10 bg-white/5 rounded backdrop-blur-sm min-h-[4rem] flex flex-col items-center justify-center">
+          <span className="text-red-500 font-bold mb-1">QUESTION {current.questionNumber}:</span>
           {questionLine}
         </div>
       </div>
@@ -345,19 +337,40 @@ const Round3Bomb = () => {
 
       {/* SUBMIT & STATUS */}
       <div className="flex flex-col items-center gap-4 w-full">
+          {feedbackMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`text-xs font-mono font-bold tracking-widest uppercase ${totalMistakes >= 20 || wrongAnswer ? 'text-red-500' : 'text-neon-cyan'}`}
+            >
+              {feedbackMessage}
+            </motion.div>
+          )}
+
           <NeonButton
             onClick={submitAnswer}
-            disabled={!selected || submitting}
-            className="w-full max-w-xs py-4"
+            disabled={!selected || submitting || totalMistakes >= 20}
+            variant={wrongAnswer ? "danger" : "primary"}
+            className={`w-full max-w-xs py-4 transition-colors duration-300 ${wrongAnswer ? 'shadow-[0_0_30px_rgba(255,0,0,0.5)]' : ''}`}
           >
             {submitting ? "VERIFYING DATA..." : "INITIATE DIFFUSION"}
           </NeonButton>
 
-          <div className="flex items-center gap-4 text-[10px] font-mono tracking-widest uppercase">
-            <span className="text-red-500/60">Integrity Breach:</span>
-            <span className="text-red-500 font-bold px-2 py-0.5 border border-red-500/20 bg-red-500/10 rounded">
-              {bomb.mistakes} MISTAKES
-            </span>
+          <div className="flex flex-col items-center gap-2 mt-2">
+            <div className="flex gap-1">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`w-1.5 h-3 border ${i < totalMistakes ? 'bg-red-600 border-red-400' : 'bg-transparent border-red-900/30'}`}
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-4 text-[10px] font-mono tracking-widest uppercase">
+              <span className="text-red-500/60">Global Integrity Breach:</span>
+              <span className={`font-bold px-2 py-0.5 border rounded transition-colors duration-300 ${totalMistakes >= 15 ? 'text-red-500 border-red-500 bg-red-500/20' : 'text-red-500 border-red-500/20 bg-red-500/10'}`}>
+                {totalMistakes} / 20 MISTAKES
+              </span>
+            </div>
           </div>
         </div>
     </div>

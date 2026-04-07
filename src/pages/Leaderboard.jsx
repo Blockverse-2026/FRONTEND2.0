@@ -19,7 +19,8 @@ const Leaderboard = () => {
     });
 
     socket.on("leaderboard:update", (data) => {
-      setLeaderboardData(data);
+      const filteredData = data.filter(entry => entry.totalPoints > 0);
+      setLeaderboardData(filteredData);
       setLoading(false);
     });
 

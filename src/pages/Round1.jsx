@@ -12,7 +12,7 @@ import { useTabSwitchGuard } from "../utils/useTabSwitchGuard.js";
 import { TabGuardPopups } from "../components/TabGuardPopups.jsx";
 
 const TOTAL_NODES = 50;
-const ROUND_TIME = 30; // 30 seconds limit
+const ROUND_TIME = 60; // 1 minute in seconds
 
 const Round1 = () => {
   const navigate = useNavigate();
@@ -156,8 +156,17 @@ const Round1 = () => {
         if (!res.ok) throw new Error("Failed to init round");
 
         setQuestions(json.data.questions);
-        // setTimeLeft(Math.floor(json.data.timeRemainingMs / 1000));
-        setTimeLeft(ROUND_TIME);
+
+        // SYNC TIMER WITH BACKEND startedAt
+        if (json.data.startedAt) {
+          const startTime = new Date(json.data.startedAt).getTime();
+          const currentTime = Date.now();
+          const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
+          const remainingSeconds = Math.max(0, ROUND_TIME - elapsedSeconds);
+          setTimeLeft(remainingSeconds);
+        } else {
+          setTimeLeft(ROUND_TIME);
+        }
       } catch (err) {
         setError(err.message);
       }
@@ -488,7 +497,7 @@ const Round1 = () => {
               <div className="h-2 bg-black/40 border border-neon-cyan/40 overflow-hidden">
                 <div
                   className="h-full bg-neon-cyan"
-                  style={{ width: (timeLeft / 300) * 100 + "%" }}
+                  style={{ width: (timeLeft / ROUND_TIME) * 100 + "%" }}
                 />
               </div>
 
