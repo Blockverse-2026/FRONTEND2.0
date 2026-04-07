@@ -20,7 +20,7 @@ const DASHBOARD_INTRO = [
   "Welcome to BlockVerse. I'm ANA, your system AI.",
   "Story: A fractured network hides critical data fragments.",
   "Rounds: FIREWALL, MARKETPLACE, ANOMALY. Navigate, solve, progress.",
-  "Streak Bonus: Maintain a streak of 5 correct answers to gain +10 bonus points in Round 1 and +2 free tokens in Round 2!",
+  "Streak Bonus: Maintain a streak of 5 correct answers in Round 1 to gain +10 bonus points!",
 ];
 
 const Dashboard = () => {

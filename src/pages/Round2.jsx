@@ -32,12 +32,12 @@ const Round2 = () => {
   const [roundTime, setRoundTime] = useState(ROUND_TIME);
   const [questionTime, setQuestionTime] = useState(QUESTION_TIME);
 
+  const [error, setError] = useState(null);
   const [tokens, setTokens] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [answerStatus, setAnswerStatus] = useState(null);
 
-  const [streak, setStreak] = useState(0);
-  const [comboMultiplier, setComboMultiplier] = useState(1);
   const [showBriefing, setShowBriefing] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [tabWarning, setTabWarning] = useState(null);
@@ -177,19 +177,10 @@ const Round2 = () => {
 
       if (json.data.correct) {
         setAnswerStatus("correct");
-
-        const newStreak = streak + 1;
-        const streakBonus = newStreak > 0 && newStreak % 5 === 0 ? 2 : 0;
-        
-        setTokens(json.data.totalRound2Score + streakBonus);
-
-        setStreak(newStreak);
-        setComboMultiplier((m) => Math.min(m + 0.1, 3));
+        setTokens(json.data.totalRound2Score);
+        setCorrectAnswers((prev) => prev + 1);
       } else {
         setAnswerStatus("incorrect");
-
-        setStreak(0);
-        setComboMultiplier(1);
       }
 
       setTimeout(nextQuestion, 1000);
@@ -426,37 +417,22 @@ const Round2 = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 py-3 border-y border-white/5">
-                <div className="space-y-1">
-                  <div className="text-neon-gold/40 text-[8px] tracking-[0.2em] uppercase font-bold text-center">Tokens</div>
-                  <div className="text-2xl text-neon-green font-orbitron text-center drop-shadow-[0_0_10px_rgba(57,255,20,0.3)]">{tokens}</div>
+              <div className="flex justify-between items-center text-xs">
+                <div className="flex flex-col">
+                  <span className="text-gray-400 text-[10px] uppercase tracking-wider">Tokens</span>
+                  <span className="text-neon-cyan text-xl font-bold">
+                    {tokens}
+                  </span>
                 </div>
-                <div className="space-y-1">
-                  <div className="text-neon-gold/40 text-[8px] tracking-[0.2em] uppercase font-bold text-center">Multiplier</div>
-                  <div className="text-2xl text-neon-gold font-orbitron text-center drop-shadow-[0_0_10px_rgba(255,170,0,0.3)]">x{comboMultiplier.toFixed(1)}</div>
+                <div className="flex flex-col items-end">
+                  <span className="text-gray-400 text-[10px] uppercase tracking-wider">Correct Answers</span>
+                  <span className="text-neon-green text-xl font-bold">
+                    {correctAnswers}
+                  </span>
                 </div>
               </div>
 
-              <div className="p-3 bg-neon-gold/5 border border-neon-gold/10 rounded-sm space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="text-neon-gold/60 text-[9px] tracking-[0.1em] uppercase font-bold">Streak Bonus (+2 TOKENS)</div>
-                  <span className="text-neon-gold text-[10px] font-bold tracking-widest">{(streak % 5)}/5</span>
-                </div>
-                <div className="flex gap-1.5">
-                  {[...Array(5)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-1.5 flex-1 rounded-sm relative overflow-hidden bg-white/5"
-                    >
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: (streak % 5) > i ? "100%" : "0%" }}
-                        className="absolute inset-0 bg-neon-gold shadow-[0_0_10px_#ffaa00]"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <div className="h-[1px] bg-white/10 my-2" />
 
               <NeonButton
                 className={`mt-2 w-full py-3 font-orbitron text-sm tracking-widest transition-all duration-500
@@ -472,7 +448,7 @@ const Round2 = () => {
           </TerminalCard>
 
           <div className="p-3 border border-neon-cyan/10 bg-neon-cyan/5 rounded backdrop-blur-sm text-[9px] font-mono text-neon-cyan/40 uppercase tracking-[0.1em] leading-relaxed">
-            <span className="text-neon-cyan/60 font-bold">[!] ADVISORY:</span> Complete the sequence to unlock Phase 2. High streaks (5+) grant +2 FREE TOKENS.
+            <span className="text-neon-cyan/60 font-bold">[!] ADVISORY:</span> Complete the sequence to unlock Phase 2. Correct answers yield tokens for the Black Market.
           </div>
         </motion.div>
 
