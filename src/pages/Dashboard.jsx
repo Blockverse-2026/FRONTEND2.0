@@ -43,6 +43,33 @@ const Dashboard = () => {
   const [introOpen, setIntroOpen] = useState(false);
   const [introStep, setIntroStep] = useState(0);
 
+  const [systemStats, setSystemStats] = useState({
+    connection: "STABLE",
+    latency: "12ms",
+    load: 75
+  });
+
+  useEffect(() => {
+    const teamKey = gameState.teamId || "default";
+    // Simple hash from teamId
+    let hash = 0;
+    for (let i = 0; i < teamKey.length; i++) {
+      hash = ((hash << 5) - hash) + teamKey.charCodeAt(i);
+      hash |= 0;
+    }
+    
+    const connections = ["STABLE", "OPTIMIZED", "ENCRYPTED", "SECURE", "BYPASSING", "DYN_LINK"];
+    const conn = connections[Math.abs(hash) % connections.length];
+    const lat = (Math.abs(hash % 28) + 7) + "ms";
+    const ld = (Math.abs(hash % 35) + 50);
+
+    setSystemStats({
+      connection: conn,
+      latency: lat,
+      load: ld
+    });
+  }, [gameState.teamId]);
+
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0 });
@@ -447,7 +474,7 @@ const Dashboard = () => {
                 <div className="space-y-4 font-mono text-sm">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400">CONNECTION</span>
-                    <span className="text-neon-green">STABLE</span>
+                    <span className="text-neon-green">{systemStats.connection}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400">SECURITY</span>
@@ -457,21 +484,21 @@ const Dashboard = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400">LATENCY</span>
-                    <span className="text-neon-gold">12ms</span>
+                    <span className="text-neon-gold">{systemStats.latency}</span>
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-gray-800">
                     <div className="w-full bg-gray-900 h-2 rounded-full overflow-hidden">
                       <Motion.div
                         initial={{ width: "0%" }}
-                        animate={{ width: "75%" }}
+                        animate={{ width: `${systemStats.load}%` }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
                         className="bg-neon-cyan h-full"
                       />
                     </div>
                     <div className="flex justify-between text-xs mt-1 text-gray-500">
                       <span>SYSTEM LOAD</span>
-                      <span>75%</span>
+                      <span>{systemStats.load}%</span>
                     </div>
                   </div>
                 </div>
